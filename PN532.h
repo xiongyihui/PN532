@@ -1,6 +1,6 @@
 /**************************************************************************/
 /*! 
-    @file     Adafruit_NFCShield_I2C.h
+    @file     PN532.h
     @author   Adafruit Industries
 	@license  BSD (see license.txt)
 	
@@ -26,8 +26,8 @@
 */
 /**************************************************************************/
 
-#ifndef Adafruit_NFCShield_I2C_h
-#define Adafruit_NFCShield_I2C_h
+#ifndef PN532_h
+#define PN532_h
 
 #if ARDUINO >= 100
  #include "Arduino.h"
@@ -36,6 +36,8 @@
 #endif
 
 #include <Wire.h>
+
+#include "PN532Interface.h"
 
 #define PN532_PREAMBLE                      (0x00)
 #define PN532_STARTCODE1                    (0x00)
@@ -154,21 +156,17 @@
 #define PN532_GPIO_P34                      (4)
 #define PN532_GPIO_P35                      (5)
 
-#define USING_SPI
 //#define PN532DEBUG
 
-class Adafruit_NFCShield_I2C{
+class PN532{
  public:
-  Adafruit_NFCShield_I2C(uint8_t irq, uint8_t reset);
-  
-  Adafruit_NFCShield_I2C(uint8_t cs);
+  PN532(uint8_t cs);
   
   void begin(void);
   
   // Generic PN532 functions
   boolean SAMConfig(void);
   uint32_t getFirmwareVersion(void);
-  boolean sendCommandCheckAck(uint8_t *cmd, uint8_t cmdlen, uint16_t timeout = 1000);  
   boolean writeGPIO(uint8_t pinstate);
   uint8_t readGPIO(void);
   boolean setPassiveActivationRetries(uint8_t maxRetries);
@@ -195,19 +193,12 @@ class Adafruit_NFCShield_I2C{
   static void PrintHexChar(const byte * pbtData, const uint32_t numBytes);
 
  private:
-  uint8_t _irq, _reset;
   uint8_t _uid[7];  // ISO14443A uid
   uint8_t _uidLen;  // uid len
   uint8_t _key[6];  // Mifare Classic key
   uint8_t inListedTag; // Tg number of inlisted tag.
-
-  boolean readackframe(void);
-  uint8_t wirereadstatus(void);
-  void    wirereaddata(uint8_t* buff, uint8_t n);
-  void    wiresendcommand(uint8_t* cmd, uint8_t cmdlen);
-  boolean waitUntilReady(uint16_t timeout);
   
-  uint8_t _cs; // SPI cs pin
+  PN532Interface* interface;
 };
 
 #endif
