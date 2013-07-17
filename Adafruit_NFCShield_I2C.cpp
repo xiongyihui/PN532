@@ -50,6 +50,10 @@
 
 #include "Adafruit_NFCShield_I2C.h"
 
+#ifdef USING_SPI
+#include <SPI.h>
+#endif
+
 byte pn532ack[] = {0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
 byte pn532response_firmwarevers[] = {0x00, 0xFF, 0x06, 0xFA, 0xD5, 0x03};
 
@@ -59,6 +63,11 @@ byte pn532response_firmwarevers[] = {0x00, 0xFF, 0x06, 0xFA, 0xD5, 0x03};
 
 #define PN532_PACKBUFFSIZ 64
 byte pn532_packetbuffer[PN532_PACKBUFFSIZ];
+
+static inline void write(uint8_t data)
+{
+    SPI.transfer(data);
+}
 
 /**************************************************************************/
 /*! 
@@ -106,12 +115,18 @@ Adafruit_NFCShield_I2C::Adafruit_NFCShield_I2C(uint8_t irq, uint8_t reset) {
   pinMode(_reset, OUTPUT);
 }
 
+Adafruit_NFCShield_I2C::Adafruit_NFCShield_I2C(uint8_t cs) {
+  _cs = cs;
+  pinMode(_cs, OUTPUT);
+}
+
 /**************************************************************************/
 /*! 
     @brief  Setups the HW
 */
 /**************************************************************************/
 void Adafruit_NFCShield_I2C::begin() {
+#ifndef USING_SPI
   Wire.begin();
 
   // Reset the PN532  
@@ -119,6 +134,19 @@ void Adafruit_NFCShield_I2C::begin() {
   digitalWrite(_reset, LOW);
   delay(400);
   digitalWrite(_reset, HIGH);
+#else
+  SPI.begin();
+  SPI.setDataMode(SPI_MODE0);
+  SPI.setBitOrder(LSBFIRST);
+  SPI.setClockDivider(SPI_CLOCK_DIV4); // set clk 4MHz, max - 5MHz
+  
+  // to wakeup PN532 or abort previous command
+  digitalWrite(_cs, LOW);
+  delay(1000);
+  pn532_packetbuffer[0] = PN532_COMMAND_GETFIRMWAREVERSION;
+  sendCommandCheckAck(pn532_packetbuffer, 1); // send a dummy command, ignore response!
+  digitalWrite(_cs, HIGH);
+  #endif
 }
  
 /**************************************************************************/
@@ -606,7 +634,7 @@ uint8_t Adafruit_NFCShield_I2C::mifareclassic_AuthenticateBlock (uint8_t * uid, 
   {
     #ifdef PN532DEBUG
     Serial.print("Authentification failed: ");
-    Adafruit_PN532::PrintHexChar(pn532_packetbuffer, 12);
+    Adafruit_NFCShield_I2C::PrintHexChar(pn532_packetbuffer, 12);
     #endif
     return 0;
   }  
@@ -938,7 +966,17 @@ boolean Adafruit_NFCShield_I2C::readackframe(void) {
 */
 /**************************************************************************/
 uint8_t Adafruit_NFCShield_I2C::wirereadstatus(void) {
+#ifndef USING_SPI
   uint8_t x = digitalRead(_irq);
+#else
+  digitalWrite(_cs, LOW);
+  delay(2);
+  SPI.transfer(0x2); // status reading
+  uint8_t status = SPI.transfer(0x0);
+  digitalWrite(_cs, HIGH);
+  
+  uint8_t x = status ? 0 : 1;
+#endif
   
   if (x == 1)
     return PN532_I2C_BUSY;
@@ -962,6 +1000,8 @@ void Adafruit_NFCShield_I2C::wirereaddata(uint8_t* buff, uint8_t n) {
 #ifdef PN532DEBUG
   Serial.print("Reading: ");
 #endif
+
+#ifndef USING_SPI
   // Start read (n+1 to take into account leading 0x01 with I2C)
   Wire.requestFrom((uint8_t)PN532_I2C_ADDRESS, (uint8_t)(n+2));
   // Discard the leading 0x01
@@ -976,7 +1016,30 @@ void Adafruit_NFCShield_I2C::wirereaddata(uint8_t* buff, uint8_t n) {
   }
   // Discard trailing 0x00 0x00
   // wirerecv();
-    
+  
+#else
+
+  digitalWrite(_cs, LOW);
+  delay(2);
+  SPI.transfer(0x3); // data reading
+
+#ifdef PN532DEBUG
+  Serial.print("Reading: ");
+#endif
+  for (uint8_t i=0; i < n; i ++) 
+  {
+    delay(1);
+    buff[i] = SPI.transfer(0);
+#ifdef PN532DEBUG
+    Serial.print(" 0x");
+    Serial.print(buff[i], HEX);
+#endif
+  }
+  digitalWrite(_cs, HIGH);
+  
+#endif
+
+  
 #ifdef PN532DEBUG
   Serial.println();
 #endif
@@ -992,6 +1055,8 @@ void Adafruit_NFCShield_I2C::wirereaddata(uint8_t* buff, uint8_t n) {
 */
 /**************************************************************************/
 void Adafruit_NFCShield_I2C::wiresendcommand(uint8_t* cmd, uint8_t cmdlen) {
+#ifndef USING_SPI
+
   uint8_t checksum;
 
   cmdlen++;
@@ -1042,6 +1107,73 @@ void Adafruit_NFCShield_I2C::wiresendcommand(uint8_t* cmd, uint8_t cmdlen) {
   Serial.print(" 0x"); Serial.print(~checksum, HEX);
   Serial.print(" 0x"); Serial.print(PN532_POSTAMBLE, HEX);
   Serial.println();
+#endif
+
+#else
+
+  uint8_t checksum;
+
+  cmdlen++;
+
+#ifdef PN532DEBUG
+  Serial.print("\nSending: ");
+#endif
+
+  digitalWrite(_cs, LOW);
+  delay(2);     // or whatever the delay is for waking up the board
+  write(0x1);   // data writing
+
+  checksum = PN532_PREAMBLE + PN532_PREAMBLE + PN532_STARTCODE2;
+  write(PN532_PREAMBLE);
+  write(PN532_PREAMBLE);
+  write(PN532_STARTCODE2);
+
+  write(cmdlen);
+  uint8_t cmdlen_1=~cmdlen + 1;
+  write(cmdlen_1);
+
+  write(PN532_HOSTTOPN532);
+  checksum += PN532_HOSTTOPN532;
+
+#ifdef PN532DEBUG
+  Serial.print(" 0x"); 
+  Serial.print(PN532_PREAMBLE, HEX);
+  Serial.print(" 0x"); 
+  Serial.print(PN532_PREAMBLE, HEX);
+  Serial.print(" 0x"); 
+  Serial.print(PN532_STARTCODE2, HEX);
+  Serial.print(" 0x"); 
+  Serial.print(cmdlen, HEX);
+  Serial.print(" 0x"); 
+  Serial.print(cmdlen_1, HEX);
+  Serial.print(" 0x"); 
+  Serial.print(PN532_HOSTTOPN532, HEX);
+#endif
+
+  for (uint8_t i=0; i<cmdlen-1; i++) 
+  {
+    write(cmd[i]);
+    checksum += cmd[i];
+#ifdef PN532DEBUG
+    Serial.print(" 0x"); 
+    Serial.print(cmd[i], HEX);
+#endif
+  }
+  uint8_t checksum_1=~checksum;
+  write(checksum_1);
+  write(PN532_POSTAMBLE);
+  
+  
+  digitalWrite(_cs, HIGH);
+
+#ifdef PN532DEBUG
+  Serial.print(" 0x"); 
+  Serial.print(checksum_1, HEX);
+  Serial.print(" 0x"); 
+  Serial.print(PN532_POSTAMBLE, HEX);
+  Serial.println();
+#endif
+
 #endif
 } 
 

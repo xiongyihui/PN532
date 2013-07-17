@@ -154,9 +154,15 @@
 #define PN532_GPIO_P34                      (4)
 #define PN532_GPIO_P35                      (5)
 
+#define USING_SPI
+//#define PN532DEBUG
+
 class Adafruit_NFCShield_I2C{
  public:
   Adafruit_NFCShield_I2C(uint8_t irq, uint8_t reset);
+  
+  Adafruit_NFCShield_I2C(uint8_t cs);
+  
   void begin(void);
   
   // Generic PN532 functions
@@ -200,6 +206,8 @@ class Adafruit_NFCShield_I2C{
   void    wirereaddata(uint8_t* buff, uint8_t n);
   void    wiresendcommand(uint8_t* cmd, uint8_t cmdlen);
   boolean waitUntilReady(uint16_t timeout);
+  
+  uint8_t _cs; // SPI cs pin
 };
 
 #endif
