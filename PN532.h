@@ -36,6 +36,7 @@
 #endif
 
 #include <Wire.h>
+#include <SPI.h>
 
 #include "PN532Interface.h"
 
@@ -159,8 +160,9 @@
 //#define PN532DEBUG
 
 class PN532{
- public:
-  PN532(uint8_t cs);
+public:
+  PN532(TwoWire &wire);
+  PN532(SPIClass &spi, uint8_t ss);
   
   void begin(void);
   
@@ -198,7 +200,7 @@ class PN532{
   uint8_t _key[6];  // Mifare Classic key
   uint8_t inListedTag; // Tg number of inlisted tag.
   
-  PN532Interface* interface;
+  PN532Interface* _interface;
 };
 
 #endif

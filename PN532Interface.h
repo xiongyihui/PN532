@@ -13,6 +13,7 @@
 #define PN532_HOSTTOPN532                   (0xD4)
 #define PN532_PN532TOHOST                   (0xD5)
 
+
 class PN532Interface {
 public:
     virtual void begin() = 0;

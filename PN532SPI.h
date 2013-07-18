@@ -2,11 +2,12 @@
 #ifndef __PN532_SPI_H__
 #define __PN532_SPI_H__
 
+#include <SPI.h>
 #include "PN532Interface.h"
 
 class PN532SPI : public PN532Interface {
 public:
-    PN532SPI(uint8_t ss);
+    PN532SPI(SPIClass &spi, uint8_t ss);
     
     void begin();
     void wakeup();
@@ -14,12 +15,16 @@ public:
     int8_t readResponse(uint8_t buf[], uint8_t len, uint16_t timeout);
     
 private:
-    uint8_t _ss;
+    SPIClass* _spi;
+    uint8_t   _ss;
     
     boolean isReady();
     void writeFrame(uint8_t buf[], uint8_t len);
     int8_t readFrame(uint8_t buf[], uint8_t len);
     int8_t readAckFrame();
+    
+    inline void write(uint8_t data) { _spi->transfer(data); }
+    inline uint8_t read() { return _spi->transfer(0); }
 };
 
 #endif

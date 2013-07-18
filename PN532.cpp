@@ -52,25 +52,30 @@
 #include <SPI.h>
 
 #include "PN532.h"
+#include "PN532_I2C.h"
 #include "PN532SPI.h"
 
-#define HAL(func)   (interface->func)
+
+#define HAL(func)   (_interface->func)
 
 
 byte pn532ack[] = {0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
 byte pn532response_firmwarevers[] = {0x00, 0xFF, 0x06, 0xFA, 0xD5, 0x03};
 
 // Uncomment these lines to enable debug output for PN532(I2C) and/or MIFARE related code
-// #define PN532DEBUG
+#define PN532DEBUG
 // #define MIFAREDEBUG
 
 #define PN532_PACKBUFFSIZ 64
 byte pn532_packetbuffer[PN532_PACKBUFFSIZ];
 
 
+PN532::PN532(TwoWire &wire) {
+  _interface = new PN532_I2C(wire);
+}
 
-PN532::PN532(uint8_t ss) {
-  interface = new PN532SPI(ss);
+PN532::PN532(SPIClass &spi, uint8_t ss) {
+  _interface = new PN532SPI(spi, ss);
 }
 
 /**************************************************************************/
@@ -157,11 +162,11 @@ uint32_t PN532::getFirmwareVersion(void) {
 
   pn532_packetbuffer[0] = PN532_COMMAND_GETFIRMWAREVERSION;
 
-  if (interface->writeCommand(pn532_packetbuffer, 1))
+  if (HAL(writeCommand)(pn532_packetbuffer, 1))
     return 0;
 	
   // read data packet
-  interface->readResponse(pn532_packetbuffer, 12);
+  HAL(readResponse)(pn532_packetbuffer, 12);
   
   // check some basic stuff
   if (0 != strncmp((char *)pn532_packetbuffer, (char *)pn532response_firmwarevers, 6)) {

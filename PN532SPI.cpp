@@ -1,33 +1,31 @@
 
 #include "PN532SPI.h"
-
-#include <SPI.h>
+#include "debug.h"
 
 #define STATUS_READ     2
 #define DATA_WRITE      1
 #define DATA_READ       3
 
-static const uint8_t PN532_ACK[] = {0, 0, 0xFF, 0, 0xFF, 0};
-
-PN532SPI::PN532SPI(uint8_t ss)
+PN532SPI::PN532SPI(SPIClass &spi, uint8_t ss)
 {
-    _ss = ss;
+    _spi = &spi;
+    _ss  = ss;
 }
 
 void PN532SPI::begin()
 {
     pinMode(_ss, OUTPUT);
     
-    SPI.begin();
-    SPI.setDataMode(SPI_MODE0);  // PN532 only supports mode0
-    SPI.setBitOrder(LSBFIRST);
-    SPI.setClockDivider(SPI_CLOCK_DIV4); // set clock 4MHz(max: 5MHz)
+    _spi->begin();
+    _spi->setDataMode(SPI_MODE0);  // PN532 only supports mode0
+    _spi->setBitOrder(LSBFIRST);
+    _spi->setClockDivider(SPI_CLOCK_DIV4); // set clock 4MHz(max: 5MHz)
 }
 
 void PN532SPI::wakeup()
 {
     digitalWrite(_ss, LOW);
-    delay(4);
+    delay(2);
     digitalWrite(_ss, HIGH);
 }
 
@@ -62,16 +60,6 @@ int8_t PN532SPI::readResponse(uint8_t buf[], uint8_t len, uint16_t timeout)
     return readFrame(buf, len);
 }
 
-static inline void write(uint8_t data)
-{
-    SPI.transfer(data);
-}
-
-static inline uint8_t read()
-{
-    return SPI.transfer(0);
-}
-
 boolean PN532SPI::isReady()
 {
     digitalWrite(_ss, LOW);
@@ -99,14 +87,13 @@ void PN532SPI::writeFrame(uint8_t buf[], uint8_t len)
     write(PN532_HOSTTOPN532);
     uint8_t sum = PN532_HOSTTOPN532;    // sum of TFI + DATA
     
-    Serial.print("write: ");
+    DMSG("write: ");
     
     for (uint8_t i = 0; i < len; i++) {
         write(buf[i]);
         sum += buf[i];
         
-        Serial.print(' ');
-        Serial.print(buf[i], HEX);
+        DMSG_HEX(buf[i]);
     }
     
     uint8_t checksum = ~sum + 1;        // checksum of TFI + DATA
@@ -115,32 +102,34 @@ void PN532SPI::writeFrame(uint8_t buf[], uint8_t len)
     
     digitalWrite(_ss, HIGH); 
     
-    Serial.print('\n');
+    DMSG('\n');
 }
 
 int8_t PN532SPI::readFrame(uint8_t buf[], uint8_t len)
 {
     digitalWrite(_ss, LOW);
-    delay(2);
+    delay(1);
     
-    Serial.print("read: ");
+    DMSG("read: ");
     
     write(DATA_READ);
     for (uint8_t i = 0; i < len; i++) {
         buf[i] = read();
-        Serial.print(' ');
-        Serial.print(buf[i], HEX);
+        
+        DMSG_HEX(buf[i]);
     }
     
     digitalWrite(_ss, HIGH);
     
-    Serial.print('\n');
+    DMSG('\n');
     
     return 0;
 }
 
 int8_t PN532SPI::readAckFrame()
 {
+    const uint8_t PN532_ACK[] = {0, 0, 0xFF, 0, 0xFF, 0};
+    
     uint8_t ackBuf[6];
     readFrame(ackBuf, 6);
     
