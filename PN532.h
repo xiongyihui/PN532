@@ -161,6 +161,7 @@
 
 class PN532{
 public:
+  PN532();              // default use I2C
   PN532(TwoWire &wire);
   PN532(SPIClass &spi, uint8_t ss);
   

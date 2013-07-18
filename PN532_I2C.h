@@ -23,11 +23,19 @@ private:
     int8_t readAckFrame();
     
     inline uint8_t write(uint8_t data) {
-        return _wire->write(data);
+        #if ARDUINO >= 100
+            return _wire->write(data);
+        #else
+            return _wire->send(data);
+        #endif
     }
     
     inline uint8_t read() {
-        return _wire->read();
+        #if ARDUINO >= 100
+            return _wire->read();
+        #else
+            return _wire->receive();
+        #endif
     }
 };
 

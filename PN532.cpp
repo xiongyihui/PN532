@@ -69,7 +69,10 @@ byte pn532response_firmwarevers[] = {0x00, 0xFF, 0x06, 0xFA, 0xD5, 0x03};
 #define PN532_PACKBUFFSIZ 64
 byte pn532_packetbuffer[PN532_PACKBUFFSIZ];
 
-
+PN532::PN532() {
+  _interface = new PN532_I2C(Wire);
+}
+    
 PN532::PN532(TwoWire &wire) {
   _interface = new PN532_I2C(wire);
 }

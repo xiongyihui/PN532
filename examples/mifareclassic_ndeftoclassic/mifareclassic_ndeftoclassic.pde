@@ -23,10 +23,8 @@
 /**************************************************************************/
 
 #include <Wire.h>
-#include <Adafruit_NFCShield_I2C.h>
-
-#define IRQ                     (2)
-#define RESET                   (3)     // Not connected by default on the NFC Shield
+#include <SPI.h>
+#include <PN532.h>
 
 #define NR_SHORTSECTOR          (32)    // Number of short sectors on Mifare 1K/4K
 #define NR_LONGSECTOR           (8)     // Number of long sectors on Mifare 4K
@@ -46,8 +44,8 @@
 // The default Mifare Classic key
 static const uint8_t KEY_DEFAULT_KEYAB[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-// Create an instance of the NFCShield_I2C class
-Adafruit_NFCShield_I2C nfc(IRQ, RESET);
+// Create an instance PN532 nfc device
+PN532 nfc(Wire);
 
 void setup(void) {
   Serial.begin(115200);

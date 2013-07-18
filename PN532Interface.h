@@ -3,7 +3,11 @@
 #ifndef __PN532_INTERFACE_H__
 #define __PN532_INTERFACE_H__
 
-#include <Arduino.h>
+#if ARDUINO >= 100
+ #include "Arduino.h"
+#else
+ #include "WProgram.h"
+#endif
 
 #define PN532_PREAMBLE                      (0x00)
 #define PN532_STARTCODE1                    (0x00)
@@ -18,7 +22,24 @@ class PN532Interface {
 public:
     virtual void begin() = 0;
     virtual void wakeup() = 0;
+    
+    /**
+    * @brief    write a command and check ack
+    * @param    buf     command to write, not contain prefix and suffix
+    * @param    len     lenght of command
+    * @return   0       success
+    *           not 0   failed
+    */
     virtual int8_t writeCommand(uint8_t buf[], uint8_t len) = 0;
+    
+    /**
+    * @brief    read the response of a command
+    * @param    buf     to contain the response data
+    * @param    len     lenght to read
+    * @param    timeout max time to wait, 0 means no timeout
+    * @return   0       success
+    *           not 0   failed
+    */
     virtual int8_t readResponse(uint8_t buf[], uint8_t len, uint16_t timeout = 1000) = 0; 
 };
 
