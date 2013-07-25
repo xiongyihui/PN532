@@ -22,7 +22,7 @@ void PN532_I2C::wakeup()
     _wire->endTransmission();                    // I2C end
 }
 
-int8_t PN532_I2C::writeCommand(uint8_t buf[], uint8_t len)
+int8_t PN532_I2C::writeCommand(const uint8_t buf[], uint8_t len)
 {
     writeFrame(buf, len);
 
@@ -34,7 +34,7 @@ int8_t PN532_I2C::readResponse(uint8_t buf[], uint8_t len, uint16_t timeout)
     return readFrame(buf, len, timeout);
 }
 
-void PN532_I2C::writeFrame(uint8_t buf[], uint8_t len)
+void PN532_I2C::writeFrame(const uint8_t buf[], uint8_t len)
 {
     _wire->beginTransmission(PN532_I2C_ADDRESS); // I2C start
     

@@ -30,7 +30,7 @@ public:
     * @return   0       success
     *           not 0   failed
     */
-    virtual int8_t writeCommand(uint8_t buf[], uint8_t len) = 0;
+    virtual int8_t writeCommand(const uint8_t buf[], uint8_t len) = 0;
     
     /**
     * @brief    read the response of a command

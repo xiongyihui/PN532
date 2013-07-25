@@ -174,6 +174,12 @@ public:
   uint8_t readGPIO(void);
   boolean setPassiveActivationRetries(uint8_t maxRetries);
   
+  uint8_t tgInitAsTarget();
+  uint8_t tgGetData(uint8_t *buf, uint16_t len);
+  boolean tgSetData(uint8_t *buf, uint16_t len);
+  uint8_t tgSetMetaData();
+  uint8_t tgResponseToInitiator();
+  
   // ISO14443A functions
   boolean inListPassiveTarget();
   boolean readPassiveTargetID(uint8_t cardbaudrate, uint8_t * uid, uint8_t * uidLength);

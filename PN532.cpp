@@ -55,11 +55,11 @@
 #include "PN532_I2C.h"
 #include "PN532SPI.h"
 
+#include "debug.h"
 
 #define HAL(func)   (_interface->func)
 
 
-byte pn532ack[] = {0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
 byte pn532response_firmwarevers[] = {0x00, 0xFF, 0x06, 0xFA, 0xD5, 0x03};
 
 // Uncomment these lines to enable debug output for PN532(I2C) and/or MIFARE related code
@@ -967,3 +967,119 @@ boolean PN532::inListPassiveTarget() {
 
   return true;
 }
+
+/**
+ * Peer to Peer
+ */
+static bool checkResponse(uint8_t *packet)
+{
+    // check header
+    if (packet[0] != 0 || packet[1] != 0 || packet[2] != 0xFF) {
+        return false;
+    }
+    
+    // check length
+    if (0 != (uint8_t)(packet[3] + packet[4])) {
+        
+        return false;
+    }
+    
+    return true;
+}
+
+uint8_t PN532::tgInitAsTarget()
+{
+    static const uint8_t command[] = {
+            PN532_COMMAND_TGINITASTARGET,
+            0,
+            0x00, 0x00,         //SENS_RES
+            0x00, 0x00, 0x00,   //NFCID1
+            0x40,               //SEL_RES
+
+            0x01, 0xFE, 0x0F, 0xBB, 0xBA, 0xA6, 0xC9, 0x89, // POL_RES
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0xFF, 0xFF,
+
+            0x01, 0xFE, 0x0F, 0xBB, 0xBA, 0xA6, 0xC9, 0x89, 0x00, 0x00, //NFCID3t: Change this to desired value
+
+            0x06, 0x46,  0x66, 0x6D, 0x01, 0x01, 0x10, 0x00// LLCP magic number and version parameter
+            };
+    
+    if (HAL(writeCommand)(command, sizeof(command))) {
+        #ifdef PN532DEBUG
+          Serial.println("command TgInitAsTarget failed");
+        #endif
+        return 1;
+    }
+    
+    return HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), 0);
+}
+
+uint8_t PN532::tgGetData(uint8_t *buf, uint16_t len)
+{
+    pn532_packetbuffer[0] = PN532_COMMAND_TGGETDATA;
+    
+    if (HAL(writeCommand)(pn532_packetbuffer, 1)) {
+        DMSG("TgGetData: no ACK\n");
+        return 0;
+    }
+    
+    if (HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), 3000)) {
+        DMSG("TgGetData: timeout when waiting for response\n");
+        return 0;
+    }
+    
+    if (!checkResponse(pn532_packetbuffer)) {
+        DMSG("TgGetData: invalid format of response frame\n");
+        return 0;
+    }
+    
+    
+    
+    uint8_t length = pn532_packetbuffer[3] - 1;
+    if (length > len) {
+        DMSG("Buffer is too small\n");
+        return 0;
+    }
+    
+    memcpy(buf, &pn532_packetbuffer[7], length);
+    
+    return length;
+}
+
+boolean PN532::tgSetData(uint8_t *buf, uint16_t len)
+{
+    pn532_packetbuffer[0] = PN532_COMMAND_TGGETDATA;
+    if (len > (sizeof(pn532_packetbuffer) + 1)) {
+        return false;
+    }
+    
+    memcpy(pn532_packetbuffer + 1, buf, len);
+    
+    if (HAL(writeCommand)(pn532_packetbuffer, len + 1)) {
+        #ifdef PN532DEBUG
+          Serial.println("command TgGetData failed");
+        #endif
+        return false;
+    }
+    
+    if (HAL(readResponse)(pn532_packetbuffer, 10, 3000)) {
+        return false;
+    }
+    
+    if (!checkResponse(pn532_packetbuffer)) {
+        return false;
+    }
+    
+    if (pn532_packetbuffer[5] != PN532_PN532TOHOST  ||
+            pn532_packetbuffer[6] != (PN532_COMMAND_TGGETDATA + 1) ||
+            pn532_packetbuffer[7] != 0) {
+        return false;
+    }
+    
+    return true;
+}
+
+
+    
+    

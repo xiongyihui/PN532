@@ -29,7 +29,7 @@ void PN532SPI::wakeup()
     digitalWrite(_ss, HIGH);
 }
 
-int8_t PN532SPI::writeCommand(uint8_t buf[], uint8_t len)
+int8_t PN532SPI::writeCommand(const uint8_t buf[], uint8_t len)
 {
     writeFrame(buf, len);
     
@@ -70,7 +70,7 @@ boolean PN532SPI::isReady()
     return status;
 }
 
-void PN532SPI::writeFrame(uint8_t buf[], uint8_t len)
+void PN532SPI::writeFrame(const uint8_t buf[], uint8_t len)
 {
     digitalWrite(_ss, LOW);
     delay(2);               // wake up PN532

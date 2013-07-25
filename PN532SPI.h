@@ -11,7 +11,7 @@ public:
     
     void begin();
     void wakeup();
-    int8_t writeCommand(uint8_t buf[], uint8_t len);
+    int8_t writeCommand(const uint8_t buf[], uint8_t len);
     int8_t readResponse(uint8_t buf[], uint8_t len, uint16_t timeout);
     
 private:
@@ -19,7 +19,7 @@ private:
     uint8_t   _ss;
     
     boolean isReady();
-    void writeFrame(uint8_t buf[], uint8_t len);
+    void writeFrame(const uint8_t buf[], uint8_t len);
     int8_t readFrame(uint8_t buf[], uint8_t len);
     int8_t readAckFrame();
     
