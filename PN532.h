@@ -88,11 +88,6 @@
 
 #define PN532_WAKEUP                        (0x55)
 
-#define PN532_SPI_STATREAD                  (0x02)
-#define PN532_SPI_DATAWRITE                 (0x01)
-#define PN532_SPI_DATAREAD                  (0x03)
-#define PN532_SPI_READY                     (0x01)
-
 #define PN532_I2C_ADDRESS                   (0x48 >> 1)
 #define PN532_I2C_READBIT                   (0x01)
 #define PN532_I2C_BUSY                      (0x00)
@@ -175,7 +170,7 @@ public:
   boolean setPassiveActivationRetries(uint8_t maxRetries);
   
   uint8_t tgInitAsTarget();
-  uint8_t tgGetData(uint8_t *buf, uint16_t len);
+  int16_t tgGetData(uint8_t *buf, uint16_t len);
   boolean tgSetData(uint8_t *buf, uint16_t len);
   uint8_t tgSetMetaData();
   uint8_t tgResponseToInitiator();

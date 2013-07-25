@@ -169,23 +169,21 @@ uint32_t PN532::getFirmwareVersion(void) {
     return 0;
 	
   // read data packet
-  HAL(readResponse)(pn532_packetbuffer, 12);
-  
-  // check some basic stuff
-  if (0 != strncmp((char *)pn532_packetbuffer, (char *)pn532response_firmwarevers, 6)) {
-    #ifdef PN532DEBUG
-    Serial.println("Firmware doesn't match!");
-	#endif
+  int16_t status = HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer));
+  if (0 > status) {
+    DMSG("GetFirmwareVersion: error code - ");
+    DMSG(status);
+    DMSG('\n');
     return 0;
   }
   
-  response = pn532_packetbuffer[7];
+  response = pn532_packetbuffer[0];
   response <<= 8;
-  response |= pn532_packetbuffer[8];
+  response |= pn532_packetbuffer[1];
   response <<= 8;
-  response |= pn532_packetbuffer[9];
+  response |= pn532_packetbuffer[2];
   response <<= 8;
-  response |= pn532_packetbuffer[10];
+  response |= pn532_packetbuffer[3];
 
   return response;
 }
@@ -229,18 +227,9 @@ boolean PN532::writeGPIO(uint8_t pinstate) {
 
   // Send the WRITEGPIO command (0x0E)  
   if (HAL(writeCommand)(pn532_packetbuffer, 3))
-    return 0x0;
+    return 0;
   
-  // Read response packet (00 00 FF PLEN PLENCHECKSUM D5 CMD+1(0x0F) DATACHECKSUM)
-  HAL(readResponse)(pn532_packetbuffer, 8);
-
-  #ifdef PN532DEBUG
-    Serial.print("Received: ");
-    PrintHex(pn532_packetbuffer, 8);
-    Serial.println("");
-  #endif  
-  
-  return  (pn532_packetbuffer[6] == 0x0F);
+  return (0 < HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer)));
 }
 
 /**************************************************************************/
@@ -264,28 +253,23 @@ uint8_t PN532::readGPIO(void) {
   if (HAL(writeCommand)(pn532_packetbuffer, 1))
     return 0x0;
   
-  // Read response packet (00 00 FF PLEN PLENCHECKSUM D5 CMD+1(0x0D) P3 P7 IO1 DATACHECKSUM)
-  HAL(readResponse)(pn532_packetbuffer, 11);
+  HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer));
 
-  /* READGPIO response should be in the following format:
+  /* READGPIO response without prefix and suffix should be in the following format:
   
     byte            Description
     -------------   ------------------------------------------
-    b0..6           Frame header and preamble
-    b7              P3 GPIO Pins
-    b8              P7 GPIO Pins (not used ... taken by I2C)
-    b9              Interface Mode Pins (not used ... bus select pins) 
-    b10             checksum */
+    b0              P3 GPIO Pins
+    b1              P7 GPIO Pins (not used ... taken by I2C)
+    b2              Interface Mode Pins (not used ... bus select pins) 
+  */
   
-  #ifdef PN532DEBUG
-    Serial.print("Received: ");
-    PrintHex(pn532_packetbuffer, 11);
-    Serial.println("");
+  #ifdef DEBUG
     Serial.print("P3 GPIO: 0x"); Serial.println(pn532_packetbuffer[7], HEX);
     Serial.print("P7 GPIO: 0x"); Serial.println(pn532_packetbuffer[8], HEX);
-    Serial.print("IO GPIO: 0x"); Serial.println(pn532_packetbuffer[9], HEX);
+    Serial.print("I0I1 GPIO: 0x"); Serial.println(pn532_packetbuffer[9], HEX);
     // Note: You can use the IO GPIO value to detect the serial bus being used
-    switch(pn532_packetbuffer[9])
+    switch(pn532_packetbuffer[3])
     {
       case 0x00:    // Using UART
         Serial.println("Using UART (IO = 0x00)");
@@ -299,7 +283,7 @@ uint8_t PN532::readGPIO(void) {
     }
   #endif
 
-  return pn532_packetbuffer[6];
+  return pn532_packetbuffer[0];
 }
 
 /**************************************************************************/
@@ -316,10 +300,7 @@ boolean PN532::SAMConfig(void) {
   if (HAL(writeCommand)(pn532_packetbuffer, 4))
      return false;
 
-  // read data packet
-  HAL(readResponse)(pn532_packetbuffer, 8);
-  
-  return  (pn532_packetbuffer[6] == 0x15);
+  return (0 < HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer)));
 }
 
 /**************************************************************************/
@@ -381,7 +362,7 @@ boolean PN532::readPassiveTargetID(uint8_t cardbaudrate, uint8_t * uid, uint8_t 
   uint8_t status = PN532_I2C_BUSY;
  
   // read data packet
-  HAL(readResponse)(pn532_packetbuffer, 20);
+  HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer));
   
   // check some basic stuff
   /* ISO14443A card response should be in the following format:
@@ -397,27 +378,27 @@ boolean PN532::readPassiveTargetID(uint8_t cardbaudrate, uint8_t * uid, uint8_t 
     b13..NFCIDLen   NFCID                                      */
   
 #ifdef MIFAREDEBUG
-    Serial.print("Found "); Serial.print(pn532_packetbuffer[7], DEC); Serial.println(" tags");
+    Serial.print("Found "); Serial.print(pn532_packetbuffer[0], DEC); Serial.println(" tags");
 #endif
-  if (pn532_packetbuffer[7] != 1) 
+  if (pn532_packetbuffer[0] != 1) 
     return 0;
     
-  uint16_t sens_res = pn532_packetbuffer[9];
+  uint16_t sens_res = pn532_packetbuffer[2];
   sens_res <<= 8;
-  sens_res |= pn532_packetbuffer[10];
+  sens_res |= pn532_packetbuffer[3];
 #ifdef MIFAREDEBUG
     Serial.print("ATQA: 0x");  Serial.println(sens_res, HEX); 
-    Serial.print("SAK: 0x");  Serial.println(pn532_packetbuffer[11], HEX); 
+    Serial.print("SAK: 0x");  Serial.println(pn532_packetbuffer[4], HEX); 
 #endif
   
   /* Card appears to be Mifare Classic */
-  *uidLength = pn532_packetbuffer[12];
+  *uidLength = pn532_packetbuffer[5];
 #ifdef MIFAREDEBUG
     Serial.print("UID:"); 
 #endif
-  for (uint8_t i=0; i < pn532_packetbuffer[12]; i++) 
+  for (uint8_t i=0; i < pn532_packetbuffer[5]; i++) 
   {
-    uid[i] = pn532_packetbuffer[13+i];
+    uid[i] = pn532_packetbuffer[6+i];
 #ifdef MIFAREDEBUG
       Serial.print(" 0x");Serial.print(uid[i], HEX); 
 #endif
@@ -512,16 +493,15 @@ uint8_t PN532::mifareclassic_AuthenticateBlock (uint8_t * uid, uint8_t uidLen, u
     return 0;
 
   // Read the response packet
-  HAL(readResponse)(pn532_packetbuffer, 12);
+  HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer));
   
   // Check if the response is valid and we are authenticated???
   // for an auth success it should be bytes 5-7: 0xD5 0x41 0x00
   // Mifare auth error is technically byte 7: 0x14 but anything other and 0x00 is not good
-  if (pn532_packetbuffer[7] != 0x00)
+  if (pn532_packetbuffer[0] != 0x00)
   {
     #ifdef PN532DEBUG
     Serial.print("Authentification failed: ");
-    PN532::PrintHexChar(pn532_packetbuffer, 12);
     #endif
     return 0;
   }  
@@ -564,10 +544,10 @@ uint8_t PN532::mifareclassic_ReadDataBlock (uint8_t blockNumber, uint8_t * data)
   }
 
   /* Read the response packet */
-  HAL(readResponse)(pn532_packetbuffer, 26);
+  HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer));
 
   /* If byte 8 isn't 0x00 we probably have an error */
-  if (pn532_packetbuffer[7] != 0x00)
+  if (pn532_packetbuffer[0] != 0x00)
   {
     #ifdef MIFAREDEBUG
     Serial.println("Unexpected response");
@@ -578,7 +558,7 @@ uint8_t PN532::mifareclassic_ReadDataBlock (uint8_t blockNumber, uint8_t * data)
     
   /* Copy the 16 data bytes to the output buffer        */
   /* Block content starts at byte 9 of a valid response */
-  memcpy (data, pn532_packetbuffer+8, 16);
+  memcpy (data, pn532_packetbuffer+1, 16);
 
   /* Display data for debug if requested */
   #ifdef MIFAREDEBUG
@@ -626,9 +606,7 @@ uint8_t PN532::mifareclassic_WriteDataBlock (uint8_t blockNumber, uint8_t * data
   delay(10);
   
   /* Read the response packet */
-  HAL(readResponse)(pn532_packetbuffer, 26);
-
-  return 1;  
+  return (0 < HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer)));
 }
 
 /**************************************************************************/
@@ -789,28 +767,20 @@ uint8_t PN532::mifareultralight_ReadPage (uint8_t page, uint8_t * buffer)
   }
   
   /* Read the response packet */
-  HAL(readResponse)(pn532_packetbuffer, 26);
-  #ifdef MIFAREDEBUG
-    Serial.println("Received: ");
-    PN532::PrintHexChar(pn532_packetbuffer, 26);
-  #endif
+  HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer));
 
   /* If byte 8 isn't 0x00 we probably have an error */
-  if (pn532_packetbuffer[7] == 0x00)
+  if (pn532_packetbuffer[0] == 0x00)
   {
     /* Copy the 4 data bytes to the output buffer         */
     /* Block content starts at byte 9 of a valid response */
     /* Note that the command actually reads 16 byte or 4  */
     /* pages at a time ... we simply discard the last 12  */
     /* bytes                                              */
-    memcpy (buffer, pn532_packetbuffer+8, 4);
+    memcpy (buffer, pn532_packetbuffer+1, 4);
   }
   else
   {
-    #ifdef MIFAREDEBUG
-      Serial.println("Unexpected response reading block: ");
-      PN532::PrintHexChar(pn532_packetbuffer, 26);
-    #endif
     return 0;
   }
 
@@ -857,49 +827,32 @@ boolean PN532::inDataExchange(uint8_t * send, uint8_t sendLength, uint8_t * resp
   }
 
 
-  HAL(readResponse)(pn532_packetbuffer,sizeof(pn532_packetbuffer), 1000);
-  
-  if (pn532_packetbuffer[0] == 0 && pn532_packetbuffer[1] == 0 && pn532_packetbuffer[2] == 0xff) {
-    uint8_t length = pn532_packetbuffer[3];
-    if (pn532_packetbuffer[4]!=(uint8_t)(~length+1)) {
-      #ifdef PN532DEBUG
-        Serial.println("Length check invalid");
-        Serial.println(length,HEX);
-        Serial.println((~length)+1,HEX);
-      #endif
-      return false;
-    }
-    if (pn532_packetbuffer[5]==PN532_PN532TOHOST && pn532_packetbuffer[6]==PN532_RESPONSE_INDATAEXCHANGE) {
-      if ((pn532_packetbuffer[7] & 0x3f)!=0) {
-        #ifdef PN532DEBUG
-          Serial.println("Status code indicates an error");
-        #endif
-        return false;
-      }
-      
-      length -= 3;
-      
-      if (length > *responseLength) {
-        length = *responseLength; // silent truncation...
-      }
-      
-      for (i=0; i<length; ++i) {
-        response[i] = pn532_packetbuffer[8+i];
-      }
-      *responseLength = length;
-      
-      return true;
-    } 
-    else {
-      Serial.print("Don't know how to handle this command: ");
-      Serial.println(pn532_packetbuffer[6],HEX);
-      return false;
-    } 
-  } 
-  else {
-    Serial.println("Preamble missing");
+  int16_t status = HAL(readResponse)(pn532_packetbuffer,sizeof(pn532_packetbuffer), 1000);
+  if (status < 0) {
     return false;
   }
+  
+  uint8_t length = status;
+
+  if ((pn532_packetbuffer[0] & 0x3f)!=0) {
+    #ifdef PN532DEBUG
+      Serial.println("Status code indicates an error");
+    #endif
+    return false;
+  }
+  
+  length -= 1;
+  
+  if (length > *responseLength) {
+    length = *responseLength; // silent truncation...
+  }
+  
+  for (i=0; i<length; ++i) {
+    response[i] = pn532_packetbuffer[1+i];
+  }
+  *responseLength = length;
+  
+  return true;
 }
 
 /**************************************************************************/
@@ -924,69 +877,30 @@ boolean PN532::inListPassiveTarget() {
     return false;
   }
 
-  HAL(readResponse)(pn532_packetbuffer,sizeof(pn532_packetbuffer), 30000);
-  
-  if (pn532_packetbuffer[0] == 0 && pn532_packetbuffer[1] == 0 && pn532_packetbuffer[2] == 0xff) {
-    uint8_t length = pn532_packetbuffer[3];
-    if (pn532_packetbuffer[4]!=(uint8_t)(~length+1)) {
-      #ifdef PN532DEBUG
-        Serial.println("Length check invalid");
-        Serial.println(length,HEX);
-        Serial.println((~length)+1,HEX);
-      #endif
-      return false;
-    }
-    if (pn532_packetbuffer[5]==PN532_PN532TOHOST && pn532_packetbuffer[6]==PN532_RESPONSE_INLISTPASSIVETARGET) {
-      if (pn532_packetbuffer[7] != 1) {
-        #ifdef PN532DEBUG
-        Serial.println("Unhandled number of targets inlisted");
-        #endif
-        Serial.println("Number of tags inlisted:");
-        Serial.println(pn532_packetbuffer[7]);
-        return false;
-      }
-      
-      inListedTag = pn532_packetbuffer[8];
-      Serial.print("Tag number: ");
-      Serial.println(inListedTag);
-      
-      return true;
-    } else {
-      #ifdef PN532DEBUG
-        Serial.print("Unexpected response to inlist passive host");
-      #endif
-      return false;
-    } 
-  } 
-  else {
-    #ifdef PN532DEBUG
-      Serial.println("Preamble missing");
-    #endif
+  int16_t status = HAL(readResponse)(pn532_packetbuffer,sizeof(pn532_packetbuffer), 30000);
+  if (status < 0) {
     return false;
   }
 
+  if (pn532_packetbuffer[0] != 1) {
+    #ifdef PN532DEBUG
+    Serial.println("Unhandled number of targets inlisted");
+    #endif
+    Serial.println("Number of tags inlisted:");
+    Serial.println(pn532_packetbuffer[0]);
+    return false;
+  }
+  
+  inListedTag = pn532_packetbuffer[1];
+  Serial.print("Tag number: ");
+  Serial.println(inListedTag);
+  
   return true;
 }
 
 /**
  * Peer to Peer
  */
-static bool checkResponse(uint8_t *packet)
-{
-    // check header
-    if (packet[0] != 0 || packet[1] != 0 || packet[2] != 0xFF) {
-        return false;
-    }
-    
-    // check length
-    if (0 != (uint8_t)(packet[3] + packet[4])) {
-        
-        return false;
-    }
-    
-    return true;
-}
-
 uint8_t PN532::tgInitAsTarget()
 {
     static const uint8_t command[] = {
@@ -1015,34 +929,28 @@ uint8_t PN532::tgInitAsTarget()
     return HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), 0);
 }
 
-uint8_t PN532::tgGetData(uint8_t *buf, uint16_t len)
+int16_t PN532::tgGetData(uint8_t *buf, uint16_t len)
 {
     pn532_packetbuffer[0] = PN532_COMMAND_TGGETDATA;
     
     if (HAL(writeCommand)(pn532_packetbuffer, 1)) {
         DMSG("TgGetData: no ACK\n");
-        return 0;
+        return -1;
     }
     
-    if (HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), 3000)) {
-        DMSG("TgGetData: timeout when waiting for response\n");
-        return 0;
+    int16_t status = HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), 3000);
+    if (0 > status) {
+        DMSG("TgGetData: failed to read response\n");
+        return status;
     }
     
-    if (!checkResponse(pn532_packetbuffer)) {
-        DMSG("TgGetData: invalid format of response frame\n");
-        return 0;
-    }
-    
-    
-    
-    uint8_t length = pn532_packetbuffer[3] - 1;
+    uint16_t length = status;
     if (length > len) {
-        DMSG("Buffer is too small\n");
-        return 0;
+        return -4;
     }
     
-    memcpy(buf, &pn532_packetbuffer[7], length);
+    memcpy(buf, &pn532_packetbuffer, length);
+
     
     return length;
 }
@@ -1063,17 +971,11 @@ boolean PN532::tgSetData(uint8_t *buf, uint16_t len)
         return false;
     }
     
-    if (HAL(readResponse)(pn532_packetbuffer, 10, 3000)) {
+    if (0 > HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), 3000)) {
         return false;
     }
     
-    if (!checkResponse(pn532_packetbuffer)) {
-        return false;
-    }
-    
-    if (pn532_packetbuffer[5] != PN532_PN532TOHOST  ||
-            pn532_packetbuffer[6] != (PN532_COMMAND_TGGETDATA + 1) ||
-            pn532_packetbuffer[7] != 0) {
+    if (0 != pn532_packetbuffer[0]) {
         return false;
     }
     

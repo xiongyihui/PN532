@@ -8,6 +8,7 @@
 
 PN532SPI::PN532SPI(SPIClass &spi, uint8_t ss)
 {
+    command = 0;
     _spi = &spi;
     _ss  = ss;
 }
@@ -31,33 +32,86 @@ void PN532SPI::wakeup()
 
 int8_t PN532SPI::writeCommand(const uint8_t buf[], uint8_t len)
 {
+    command = buf[0];
     writeFrame(buf, len);
     
-    uint8_t timeout = 100;
+    uint8_t timeout = PN532_ACK_WAIT_TIME;
     while (!isReady()) {
         delay(1);
         timeout--;
         if (0 == timeout) {
-            return -1;
+            DMSG("Time out when waiting for ACK\n");
+            return -2;
         }
     }
-    return readAckFrame();
+    if (readAckFrame()) {
+        DMSG("Invalid ACK\n");
+        return PN532_INVALID_ACK;
+    }
+    return 0;
 }
 
-int8_t PN532SPI::readResponse(uint8_t buf[], uint8_t len, uint16_t timeout)
+int16_t PN532SPI::readResponse(uint8_t buf[], uint8_t len, uint16_t timeout)
 {
     uint16_t time = 0;
     while (!isReady()) {
         delay(1);
-        if (timeout > 0) {
-            time++;
-            if (time >= timeout) {
-                return -1;
-            }
+        time++;
+        if (timeout > 0 && time > timeout) {
+            return PN532_TIMEOUT;
         }
     }
     
-    return readFrame(buf, len);
+    digitalWrite(_ss, LOW);
+    delay(1);
+    
+    write(DATA_READ);
+    
+    if (0x00 != read()      ||       // PREAMBLE
+            0x00 != read()  ||       // STARTCODE1
+            0xFF != read()           // STARTCODE2
+        ) {
+        
+        return PN532_INVALID_FRAME;
+    }
+    
+    uint8_t length = read();
+    if (0 != (uint8_t)(length + read())) {   // checksum of length
+        return PN532_INVALID_FRAME;
+    }
+    
+    uint8_t cmd = command + 1;               // response command
+    if (PN532_PN532TOHOST != read() || (cmd) != read()) {
+        return PN532_INVALID_FRAME;
+    }
+    
+    length -= 2;
+    if (length > len) {
+        return PN532_NO_SPACE;  // not enough space
+    }
+    
+    DMSG("read:  ");
+    DMSG_HEX(cmd);
+    
+    uint8_t sum = PN532_PN532TOHOST + cmd;
+    for (uint8_t i = 0; i < length; i++) {
+        buf[i] = read();
+        sum += buf[i];
+        
+        DMSG_HEX(buf[i]);
+    }
+    DMSG('\n');
+    
+    uint8_t checksum = read();
+    if (0 != (uint8_t)(sum + checksum)) {
+        DMSG("checksum is not ok\n");
+        return PN532_INVALID_FRAME;
+    }
+    read();         // POSTAMBLE
+    
+    digitalWrite(_ss, HIGH);
+    
+    return length;
 }
 
 boolean PN532SPI::isReady()
@@ -105,33 +159,21 @@ void PN532SPI::writeFrame(const uint8_t buf[], uint8_t len)
     DMSG('\n');
 }
 
-int8_t PN532SPI::readFrame(uint8_t buf[], uint8_t len)
-{
-    digitalWrite(_ss, LOW);
-    delay(1);
-    
-    DMSG("read: ");
-    
-    write(DATA_READ);
-    for (uint8_t i = 0; i < len; i++) {
-        buf[i] = read();
-        
-        DMSG_HEX(buf[i]);
-    }
-    
-    digitalWrite(_ss, HIGH);
-    
-    DMSG('\n');
-    
-    return 0;
-}
-
 int8_t PN532SPI::readAckFrame()
 {
     const uint8_t PN532_ACK[] = {0, 0, 0xFF, 0, 0xFF, 0};
     
-    uint8_t ackBuf[6];
-    readFrame(ackBuf, 6);
+    uint8_t ackBuf[sizeof(PN532_ACK)];
     
-    return memcmp(ackBuf, PN532_ACK, 6);
+    digitalWrite(_ss, LOW);
+    delay(1);
+    write(DATA_READ);
+    
+    for (uint8_t i = 0; i < sizeof(PN532_ACK); i++) {
+        ackBuf[i] = read();
+    }
+    
+    digitalWrite(_ss, HIGH);
+    
+    return memcmp(ackBuf, PN532_ACK, sizeof(PN532_ACK));
 }
