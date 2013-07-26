@@ -64,54 +64,70 @@ int16_t PN532SPI::readResponse(uint8_t buf[], uint8_t len, uint16_t timeout)
     
     digitalWrite(_ss, LOW);
     delay(1);
-    
-    write(DATA_READ);
-    
-    if (0x00 != read()      ||       // PREAMBLE
-            0x00 != read()  ||       // STARTCODE1
-            0xFF != read()           // STARTCODE2
-        ) {
+
+    int16_t result;
+    do {
+        write(DATA_READ);
         
-        return PN532_INVALID_FRAME;
-    }
-    
-    uint8_t length = read();
-    if (0 != (uint8_t)(length + read())) {   // checksum of length
-        return PN532_INVALID_FRAME;
-    }
-    
-    uint8_t cmd = command + 1;               // response command
-    if (PN532_PN532TOHOST != read() || (cmd) != read()) {
-        return PN532_INVALID_FRAME;
-    }
-    
-    length -= 2;
-    if (length > len) {
-        return PN532_NO_SPACE;  // not enough space
-    }
-    
-    DMSG("read:  ");
-    DMSG_HEX(cmd);
-    
-    uint8_t sum = PN532_PN532TOHOST + cmd;
-    for (uint8_t i = 0; i < length; i++) {
-        buf[i] = read();
-        sum += buf[i];
+        if (0x00 != read()      ||       // PREAMBLE
+                0x00 != read()  ||       // STARTCODE1
+                0xFF != read()           // STARTCODE2
+            ) {
+            
+            result = PN532_INVALID_FRAME;
+            break;
+        }
         
-        DMSG_HEX(buf[i]);
-    }
-    DMSG('\n');
-    
-    uint8_t checksum = read();
-    if (0 != (uint8_t)(sum + checksum)) {
-        DMSG("checksum is not ok\n");
-        return PN532_INVALID_FRAME;
-    }
-    read();         // POSTAMBLE
+        uint8_t length = read();
+        if (0 != (uint8_t)(length + read())) {   // checksum of length
+            result = PN532_INVALID_FRAME;
+            break;
+        }
+        
+        uint8_t cmd = command + 1;               // response command
+        if (PN532_PN532TOHOST != read() || (cmd) != read()) {
+            result = PN532_INVALID_FRAME;
+            break;
+        }
+        
+        DMSG("read:  ");
+        DMSG_HEX(cmd);
+        
+        length -= 2;
+        if (length > len) {
+            for (uint8_t i = 0; i < length; i++) {
+                DMSG_HEX(read());                 // dump message
+            }
+            DMSG("\nNot enough space\n");
+            read();                                     
+            read();
+            result = PN532_NO_SPACE;  // not enough space
+            break;
+        }
+        
+        uint8_t sum = PN532_PN532TOHOST + cmd;
+        for (uint8_t i = 0; i < length; i++) {
+            buf[i] = read();
+            sum += buf[i];
+            
+            DMSG_HEX(buf[i]);
+        }
+        DMSG('\n');
+        
+        uint8_t checksum = read();
+        if (0 != (uint8_t)(sum + checksum)) {
+            DMSG("checksum is not ok\n");
+            result = PN532_INVALID_FRAME;
+            break;
+        }
+        read();         // POSTAMBLE
+        
+        result = length;
+    } while (0);
     
     digitalWrite(_ss, HIGH);
     
-    return length;
+    return result;
 }
 
 boolean PN532SPI::isReady()
