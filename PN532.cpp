@@ -66,7 +66,7 @@ byte pn532response_firmwarevers[] = {0x00, 0xFF, 0x06, 0xFA, 0xD5, 0x03};
 #define PN532DEBUG
 // #define MIFAREDEBUG
 
-#define PN532_PACKBUFFSIZ 64
+#define PN532_PACKBUFFSIZ 128
 byte pn532_packetbuffer[PN532_PACKBUFFSIZ];
 
 PN532::PN532() {
@@ -855,7 +855,7 @@ boolean PN532::inListPassiveTarget() {
 /**
  * Peer to Peer
  */
-uint8_t PN532::tgInitAsTarget()
+int8_t PN532::tgInitAsTarget()
 {
     static const uint8_t command[] = {
             PN532_COMMAND_TGINITASTARGET,
@@ -873,9 +873,9 @@ uint8_t PN532::tgInitAsTarget()
             0x06, 0x46,  0x66, 0x6D, 0x01, 0x01, 0x10, 0x00// LLCP magic number and version parameter
             };
     
-    if (HAL(writeCommand)(command, sizeof(command))) {
-        DMSG("command TgInitAsTarget failed\n");
-        return 1;
+    int8_t status = HAL(writeCommand)(command, sizeof(command));
+    if (status < 0) {
+        return status;
     }
     
     return HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), 0);
@@ -892,7 +892,9 @@ int16_t PN532::tgGetData(uint8_t *buf, uint16_t len)
     
     int16_t status = HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), 3000);
     if (0 > status) {
-        DMSG("TgGetData: failed to read response\n");
+        DMSG("TgGetData: failed to read response, error code - ");
+        DMSG(status);
+        DMSG('\n');
         return status;
     }
     
@@ -901,15 +903,20 @@ int16_t PN532::tgGetData(uint8_t *buf, uint16_t len)
         return -4;
     }
     
-    memcpy(buf, &pn532_packetbuffer, length);
+    if (pn532_packetbuffer[0] != 0) {
+        DMSG("status is not ok\n");
+        return -5;
+    }
+    
+    memcpy(buf, pn532_packetbuffer + 1, length - 1);
 
     
-    return length;
+    return length - 1;
 }
 
-boolean PN532::tgSetData(uint8_t *buf, uint16_t len)
+boolean PN532::tgSetData(const uint8_t *buf, uint16_t len)
 {
-    pn532_packetbuffer[0] = PN532_COMMAND_TGGETDATA;
+    pn532_packetbuffer[0] = PN532_COMMAND_TGSETDATA;
     if (len > (sizeof(pn532_packetbuffer) + 1)) {
         return false;
     }

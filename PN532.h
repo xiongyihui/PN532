@@ -169,11 +169,9 @@ public:
   uint8_t readGPIO(void);
   boolean setPassiveActivationRetries(uint8_t maxRetries);
   
-  uint8_t tgInitAsTarget();
+  int8_t tgInitAsTarget();
   int16_t tgGetData(uint8_t *buf, uint16_t len);
-  boolean tgSetData(uint8_t *buf, uint16_t len);
-  uint8_t tgSetMetaData();
-  uint8_t tgResponseToInitiator();
+  boolean tgSetData(const uint8_t *buf, uint16_t len);
   
   // ISO14443A functions
   boolean inListPassiveTarget();
