@@ -221,9 +221,8 @@ boolean PN532::writeGPIO(uint8_t pinstate) {
   pn532_packetbuffer[1] = PN532_GPIO_VALIDATIONBIT | pinstate;  // P3 Pins
   pn532_packetbuffer[2] = 0x00;    // P7 GPIO Pins (not used ... taken by I2C)
 
-  #ifdef PN532DEBUG
-    Serial.print("Writing P3 GPIO: "); Serial.println(pn532_packetbuffer[1], HEX);
-  #endif
+  DMSG("Writing P3 GPIO: ");
+  DMSG_HEX(pn532_packetbuffer[1]);
 
   // Send the WRITEGPIO command (0x0E)  
   if (HAL(writeCommand)(pn532_packetbuffer, 3))
@@ -264,10 +263,12 @@ uint8_t PN532::readGPIO(void) {
     b2              Interface Mode Pins (not used ... bus select pins) 
   */
   
+
+  DMSG("P3 GPIO: "); DMSG_HEX(pn532_packetbuffer[7]);
+  DMSG("P7 GPIO: "); DMSG_HEX(pn532_packetbuffer[8]);
+  DMSG("I0I1 GPIO: "); DMSG_HEX(pn532_packetbuffer[9]);
+    
   #ifdef DEBUG
-    Serial.print("P3 GPIO: 0x"); Serial.println(pn532_packetbuffer[7], HEX);
-    Serial.print("P7 GPIO: 0x"); Serial.println(pn532_packetbuffer[8], HEX);
-    Serial.print("I0I1 GPIO: 0x"); Serial.println(pn532_packetbuffer[9], HEX);
     // Note: You can use the IO GPIO value to detect the serial bus being used
     switch(pn532_packetbuffer[3])
     {
@@ -320,9 +321,9 @@ boolean PN532::setPassiveActivationRetries(uint8_t maxRetries) {
   pn532_packetbuffer[3] = 0x01; // MxRtyPSL (default = 0x01)
   pn532_packetbuffer[4] = maxRetries;
 
-#ifdef MIFAREDEBUG
-  Serial.print("Setting MxRtyPassiveActivation to "); Serial.print(maxRetries, DEC); Serial.println(" ");
-#endif
+  DMSG("Setting MxRtyPassiveActivation to ");
+  DMSG(maxRetries);
+  DMSG('\n');
   
   if (HAL(writeCommand)(pn532_packetbuffer, 5))
     return 0x0;  // no ACK
@@ -352,9 +353,7 @@ boolean PN532::readPassiveTargetID(uint8_t cardbaudrate, uint8_t * uid, uint8_t 
   
   if (HAL(writeCommand)(pn532_packetbuffer, 3))
   {
-    #ifdef PN532DEBUG
-	Serial.println("No card(s) read");
-	#endif
+	DMSG("No card(s) read");
     return 0x0;  // no cards read
   }
   
@@ -377,35 +376,28 @@ boolean PN532::readPassiveTargetID(uint8_t cardbaudrate, uint8_t * uid, uint8_t 
     b12             NFCID Length
     b13..NFCIDLen   NFCID                                      */
   
-#ifdef MIFAREDEBUG
-    Serial.print("Found "); Serial.print(pn532_packetbuffer[0], DEC); Serial.println(" tags");
-#endif
+  DMSG("Found "); DMSG(pn532_packetbuffer[0]); DMSG(" tags\n");
+
   if (pn532_packetbuffer[0] != 1) 
     return 0;
     
   uint16_t sens_res = pn532_packetbuffer[2];
   sens_res <<= 8;
   sens_res |= pn532_packetbuffer[3];
-#ifdef MIFAREDEBUG
-    Serial.print("ATQA: 0x");  Serial.println(sens_res, HEX); 
-    Serial.print("SAK: 0x");  Serial.println(pn532_packetbuffer[4], HEX); 
-#endif
+
+  DMSG("ATQA: 0x");  DMSG_HEX(sens_res); 
+  DMSG("SAK: 0x");  DMSG_HEX(pn532_packetbuffer[4]); 
   
   /* Card appears to be Mifare Classic */
   *uidLength = pn532_packetbuffer[5];
-#ifdef MIFAREDEBUG
-    Serial.print("UID:"); 
-#endif
+
+  DMSG("UID:"); 
   for (uint8_t i=0; i < pn532_packetbuffer[5]; i++) 
   {
     uid[i] = pn532_packetbuffer[6+i];
-#ifdef MIFAREDEBUG
-      Serial.print(" 0x");Serial.print(uid[i], HEX); 
-#endif
+    DMSG(uid[i]); 
   }
-#ifdef MIFAREDEBUG
-    Serial.println();
-#endif
+  DMSG('\n');
 
   return 1;
 }
@@ -500,9 +492,7 @@ uint8_t PN532::mifareclassic_AuthenticateBlock (uint8_t * uid, uint8_t uidLen, u
   // Mifare auth error is technically byte 7: 0x14 but anything other and 0x00 is not good
   if (pn532_packetbuffer[0] != 0x00)
   {
-    #ifdef PN532DEBUG
-    Serial.print("Authentification failed: ");
-    #endif
+    DMSG("Authentification failed\n");
     return 0;
   }  
   
@@ -549,23 +539,12 @@ uint8_t PN532::mifareclassic_ReadDataBlock (uint8_t blockNumber, uint8_t * data)
   /* If byte 8 isn't 0x00 we probably have an error */
   if (pn532_packetbuffer[0] != 0x00)
   {
-    #ifdef MIFAREDEBUG
-    Serial.println("Unexpected response");
-    PN532::PrintHexChar(pn532_packetbuffer, 26);
-    #endif
     return 0;
   }
     
   /* Copy the 16 data bytes to the output buffer        */
   /* Block content starts at byte 9 of a valid response */
   memcpy (data, pn532_packetbuffer+1, 16);
-
-  /* Display data for debug if requested */
-  #ifdef MIFAREDEBUG
-    Serial.print("Block ");
-    Serial.println(blockNumber);
-    PN532::PrintHexChar(data, 16);
-  #endif
 
   return 1;  
 }
@@ -584,9 +563,9 @@ uint8_t PN532::mifareclassic_ReadDataBlock (uint8_t blockNumber, uint8_t * data)
 /**************************************************************************/
 uint8_t PN532::mifareclassic_WriteDataBlock (uint8_t blockNumber, uint8_t * data)
 {
-  #ifdef MIFAREDEBUG
-  Serial.print("Trying to write 16 bytes to block ");Serial.println(blockNumber);
-  #endif
+  DMSG("Trying to write 16 bytes to block ");
+  DMSG(blockNumber);
+  DMSG('\n');
   
   /* Prepare the first command */
   pn532_packetbuffer[0] = PN532_COMMAND_INDATAEXCHANGE;
@@ -598,12 +577,9 @@ uint8_t PN532::mifareclassic_WriteDataBlock (uint8_t blockNumber, uint8_t * data
   /* Send the command */
   if (HAL(writeCommand)(pn532_packetbuffer, 20))
   {
-    #ifdef MIFAREDEBUG
-    Serial.println("Failed to receive ACK for write command");
-    #endif
+    DMSG("Failed to receive ACK for write command");
     return 0;
-  }  
-  delay(10);
+  }
   
   /* Read the response packet */
   return (0 < HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer)));
@@ -741,15 +717,13 @@ uint8_t PN532::mifareultralight_ReadPage (uint8_t page, uint8_t * buffer)
 {
   if (page >= 64)
   {
-    #ifdef MIFAREDEBUG
-    Serial.println("Page value out of range");
-    #endif
+    DMSG("Page value out of range\n");
     return 0;
   }
 
-  #ifdef MIFAREDEBUG
-    Serial.print("Reading page ");Serial.println(page);
-  #endif
+  DMSG("Reading page ");
+  DMSG(page);
+  DMSG('\n');
 
   /* Prepare the command */
   pn532_packetbuffer[0] = PN532_COMMAND_INDATAEXCHANGE;
@@ -760,9 +734,7 @@ uint8_t PN532::mifareultralight_ReadPage (uint8_t page, uint8_t * buffer)
   /* Send the command */
   if (HAL(writeCommand)(pn532_packetbuffer, 4))
   {
-    #ifdef MIFAREDEBUG
-    Serial.println("Failed to receive ACK for write command");
-    #endif
+    DMSG("Failed to receive ACK for write command\n");
     return 0;
   }
   
@@ -783,12 +755,6 @@ uint8_t PN532::mifareultralight_ReadPage (uint8_t page, uint8_t * buffer)
   {
     return 0;
   }
-
-  /* Display data for debug if requested */
-  #ifdef MIFAREDEBUG
-    Serial.print("Page ");Serial.print(page);Serial.println(":");
-    PN532::PrintHexChar(buffer, 4);
-  #endif
 
   // Return OK signal
   return 1;
@@ -820,9 +786,7 @@ boolean PN532::inDataExchange(uint8_t * send, uint8_t sendLength, uint8_t * resp
   }
   
   if (HAL(writeCommand)(pn532_packetbuffer,sendLength+2)) {
-    #ifdef PN532DEBUG
-      Serial.println("Could not send ADPU");
-    #endif
+    DMSG("Could not send ADPU\n");
     return false;
   }
 
@@ -835,9 +799,7 @@ boolean PN532::inDataExchange(uint8_t * send, uint8_t sendLength, uint8_t * resp
   uint8_t length = status;
 
   if ((pn532_packetbuffer[0] & 0x3f)!=0) {
-    #ifdef PN532DEBUG
-      Serial.println("Status code indicates an error");
-    #endif
+    DMSG("Status code indicates an error\n");
     return false;
   }
   
@@ -866,14 +828,10 @@ boolean PN532::inListPassiveTarget() {
   pn532_packetbuffer[1] = 1;
   pn532_packetbuffer[2] = 0;
   
-  #ifdef PN532DEBUG 
-    Serial.print("About to inList passive target");
-  #endif
+  DMSG("About to inList passive target");
 
   if (HAL(writeCommand)(pn532_packetbuffer, 3)) {
-    #ifdef PN532DEBUG
-      Serial.println("Could not send inlist message");
-    #endif
+    DMSG("Could not send inlist message\n");
     return false;
   }
 
@@ -883,17 +841,13 @@ boolean PN532::inListPassiveTarget() {
   }
 
   if (pn532_packetbuffer[0] != 1) {
-    #ifdef PN532DEBUG
-    Serial.println("Unhandled number of targets inlisted");
-    #endif
-    Serial.println("Number of tags inlisted:");
-    Serial.println(pn532_packetbuffer[0]);
     return false;
   }
   
   inListedTag = pn532_packetbuffer[1];
-  Serial.print("Tag number: ");
-  Serial.println(inListedTag);
+  DMSG("Tag number: ");
+  DMSG(inListedTag);
+  DMSG('\n');
   
   return true;
 }
@@ -920,9 +874,7 @@ uint8_t PN532::tgInitAsTarget()
             };
     
     if (HAL(writeCommand)(command, sizeof(command))) {
-        #ifdef PN532DEBUG
-          Serial.println("command TgInitAsTarget failed");
-        #endif
+        DMSG("command TgInitAsTarget failed\n");
         return 1;
     }
     
@@ -965,9 +917,6 @@ boolean PN532::tgSetData(uint8_t *buf, uint16_t len)
     memcpy(pn532_packetbuffer + 1, buf, len);
     
     if (HAL(writeCommand)(pn532_packetbuffer, len + 1)) {
-        #ifdef PN532DEBUG
-          Serial.println("command TgGetData failed");
-        #endif
         return false;
     }
     
