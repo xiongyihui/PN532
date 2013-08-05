@@ -20,7 +20,7 @@ void PN532SPI::begin()
     _spi->begin();
     _spi->setDataMode(SPI_MODE0);  // PN532 only supports mode0
     _spi->setBitOrder(LSBFIRST);
-    _spi->setClockDivider(SPI_CLOCK_DIV4); // set clock 4MHz(max: 5MHz)
+    _spi->setClockDivider(SPI_CLOCK_DIV2); // set clock 2MHz(max: 5MHz)
 }
 
 void PN532SPI::wakeup()
