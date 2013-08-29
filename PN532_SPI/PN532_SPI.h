@@ -5,9 +5,9 @@
 #include <SPI.h>
 #include "PN532Interface.h"
 
-class PN532SPI : public PN532Interface {
+class PN532_SPI : public PN532Interface {
 public:
-    PN532SPI(SPIClass &spi, uint8_t ss);
+    PN532_SPI(SPIClass &spi, uint8_t ss);
     
     void begin();
     void wakeup();

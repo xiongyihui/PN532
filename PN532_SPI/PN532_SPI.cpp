@@ -1,19 +1,19 @@
 
-#include "PN532SPI.h"
+#include "PN532_SPI.h"
 #include "debug.h"
 
 #define STATUS_READ     2
 #define DATA_WRITE      1
 #define DATA_READ       3
 
-PN532SPI::PN532SPI(SPIClass &spi, uint8_t ss)
+PN532_SPI::PN532_SPI(SPIClass &spi, uint8_t ss)
 {
     command = 0;
     _spi = &spi;
     _ss  = ss;
 }
 
-void PN532SPI::begin()
+void PN532_SPI::begin()
 {
     pinMode(_ss, OUTPUT);
     
@@ -23,14 +23,14 @@ void PN532SPI::begin()
     _spi->setClockDivider(SPI_CLOCK_DIV8); // set clock 2MHz(max: 5MHz)
 }
 
-void PN532SPI::wakeup()
+void PN532_SPI::wakeup()
 {
     digitalWrite(_ss, LOW);
     delay(2);
     digitalWrite(_ss, HIGH);
 }
 
-int8_t PN532SPI::writeCommand(const uint8_t buf[], uint8_t len)
+int8_t PN532_SPI::writeCommand(const uint8_t buf[], uint8_t len)
 {
     command = buf[0];
     writeFrame(buf, len);
@@ -51,7 +51,7 @@ int8_t PN532SPI::writeCommand(const uint8_t buf[], uint8_t len)
     return 0;
 }
 
-int16_t PN532SPI::readResponse(uint8_t buf[], uint8_t len, uint16_t timeout)
+int16_t PN532_SPI::readResponse(uint8_t buf[], uint8_t len, uint16_t timeout)
 {
     uint16_t time = 0;
     while (!isReady()) {
@@ -130,7 +130,7 @@ int16_t PN532SPI::readResponse(uint8_t buf[], uint8_t len, uint16_t timeout)
     return result;
 }
 
-boolean PN532SPI::isReady()
+boolean PN532_SPI::isReady()
 {
     digitalWrite(_ss, LOW);
     
@@ -140,7 +140,7 @@ boolean PN532SPI::isReady()
     return status;
 }
 
-void PN532SPI::writeFrame(const uint8_t buf[], uint8_t len)
+void PN532_SPI::writeFrame(const uint8_t buf[], uint8_t len)
 {
     digitalWrite(_ss, LOW);
     delay(2);               // wake up PN532
@@ -175,7 +175,7 @@ void PN532SPI::writeFrame(const uint8_t buf[], uint8_t len)
     DMSG('\n');
 }
 
-int8_t PN532SPI::readAckFrame()
+int8_t PN532_SPI::readAckFrame()
 {
     const uint8_t PN532_ACK[] = {0, 0, 0xFF, 0, 0xFF, 0};
     
