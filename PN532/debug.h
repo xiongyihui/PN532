@@ -1,9 +1,7 @@
-
-
 #ifndef __DEBUG_H__
 #define __DEBUG_H__
 
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 #define DMSG(str)       Serial.print(str)
