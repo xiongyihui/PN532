@@ -1,33 +1,30 @@
 /**************************************************************************/
-/*! 
-    @file     mifareclassic_updatendef.pde
-    @author   Adafruit Industries
-  	@license  BSD (see license.txt)
-
+/*!
     Updates a sector that is already formatted for NDEF (using
     mifareclassic_formatndef.pde for example), inserting a new url
-
-    This is an example sketch for the Adafruit PN532 NFC/RFID breakout boards
-    This library works with the Adafruit NFC Shield 
-      ----> https://www.adafruit.com/products/789
- 
-    Check out the links above for our tutorials and wiring diagrams 
-    These chips use I2C to communicate
-
-    Adafruit invests time and resources providing this open source code, 
-    please support Adafruit and open-source hardware by purchasing 
-    products from Adafruit!
-
 */
 /**************************************************************************/
+
+// choose to SPI or I2C
+#if 0
+
+#include <SPI.h>
+#include <PN532SPI.h>
+#include "PN532.h"
+
+PN532SPI pn532spi(SPI, 10);
+PN532 nfc(pn532spi);
+
+#else
 
 #include <Wire.h>
 #include <PN532_I2C.h>
 #include <PN532.h>
 
-
 PN532_I2C pn532i2c(Wire);
 PN532 nfc(pn532i2c);
+
+#endif
 
 
 /*  
@@ -37,7 +34,7 @@ PN532 nfc(pn532i2c);
     prefixes! 
 */
 // For a http://www. url:
-const char * url = "adafruit.com/blog/";
+const char * url = "seeedstudio.com";
 uint8_t ndefprefix = NDEF_URIPREFIX_HTTP_WWWDOT;
 
 // for an email address
