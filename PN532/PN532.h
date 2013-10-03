@@ -1,21 +1,12 @@
 /**************************************************************************/
 /*! 
     @file     PN532.h
-    @author   Adafruit Industries
-	@license  BSD (see license.txt)
-	
-	This is a library for the Adafruit PN532 NFC/RFID shield
-	This library works with the Adafruit NFC breakout 
-	----> https://www.adafruit.com/products/364
-	
-	Check out the links above for our tutorials and wiring diagrams 
-	These chips use I2C to communicate
-	
-	Adafruit invests time and resources providing this open source code, 
-	please support Adafruit and open-source hardware by purchasing 
-	products from Adafruit!
+    @author   Adafruit Industries & Seeed Studio
+    @license  BSD (see license.txt)
 
-	@section  HISTORY
+
+    @section  HISTORY
+    v1.5 - Modified to work with I2C and SPI
 
     v1.3  - Modified to work with I2C
 	

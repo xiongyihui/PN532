@@ -1,23 +1,12 @@
 /**************************************************************************/
 /*! 
     @file     PN532.cpp
-    @author   Adafruit Industries
-	@license  BSD (see license.txt)
-	
-	I2C Driver for NXP's PN532 NFC/13.56MHz RFID Transceiver
+    @author   Adafruit Industries & Seeed Studio
+    @license  BSD (see license.txt)
 
-	This is a library for the Adafruit PN532 NFC/RFID shields
-	This library works with the Adafruit NFC breakout 
-	----> https://www.adafruit.com/products/364
-	
-	Check out the links above for our tutorials and wiring diagrams 
-	These chips use I2C to communicate
-	
-	Adafruit invests time and resources providing this open source code, 
-	please support Adafruit and open-source hardware by purchasing 
-	products from Adafruit!
 
-	@section  HISTORY
+    @section  HISTORY
+    v1.5 - Modified to work with I2C and SPI
 
     v1.4 - Added setPassiveActivationRetries()
 	
