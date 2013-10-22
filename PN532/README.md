@@ -6,6 +6,7 @@ It works with
 
 + http://www.seeedstudio.com/depot/nfc-shield-v20-p-1370.html?cPath=19_24
 + https://www.adafruit.com/products/364
++ [Elechouse NFC Module](http://goo.gl/i0EQgd)
 
 ### Features
 + Support I2C and SPI of PN532
