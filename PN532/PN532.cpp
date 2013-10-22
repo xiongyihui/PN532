@@ -269,6 +269,8 @@ boolean PN532::SAMConfig(void) {
   pn532_packetbuffer[2] = 0x14; // timeout 50ms * 20 = 1 second
   pn532_packetbuffer[3] = 0x01; // use IRQ pin!
   
+  DMSG("SAMConfig\n");
+  
   if (HAL(writeCommand)(pn532_packetbuffer, 4))
      return false;
 
@@ -298,8 +300,8 @@ boolean PN532::setPassiveActivationRetries(uint8_t maxRetries) {
   
   if (HAL(writeCommand)(pn532_packetbuffer, 5))
     return 0x0;  // no ACK
-  
-  return 1;
+
+  return (0 < HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer)));
 }
 
 /***** ISO14443A Commands ******/
