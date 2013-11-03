@@ -732,7 +732,7 @@ bool PN532::inListPassiveTarget()
 /**
  * Peer to Peer
  */
-int8_t PN532::tgInitAsTarget()
+int8_t PN532::tgInitAsTarget(uint16_t timeout)
 {
     static const uint8_t command[] = {
         PN532_COMMAND_TGINITASTARGET,
@@ -752,13 +752,20 @@ int8_t PN532::tgInitAsTarget()
 
     int8_t status = HAL(writeCommand)(command, sizeof(command));
     if (status < 0) {
-        return status;
+        return -1;
     }
 
-    return HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), 0);
+    status = HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), timeout);
+    if (status > 0) {
+        return 1;
+    } else if (PN532_TIMEOUT == status) {
+        return 0;
+    } else {
+        return -2;
+    }
 }
 
-int16_t PN532::tgGetData(uint8_t *buf, uint16_t len)
+int16_t PN532::tgGetData(uint8_t *buf, uint8_t len)
 {
     pn532_packetbuffer[0] = PN532_COMMAND_TGGETDATA;
 
@@ -787,7 +794,7 @@ int16_t PN532::tgGetData(uint8_t *buf, uint16_t len)
     return length - 1;
 }
 
-bool PN532::tgSetData(const uint8_t *buf, uint16_t len)
+bool PN532::tgSetData(const uint8_t *buf, uint8_t len)
 {
     pn532_packetbuffer[0] = PN532_COMMAND_TGSETDATA;
     if (len > (sizeof(pn532_packetbuffer) + 1)) {

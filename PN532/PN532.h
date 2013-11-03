@@ -139,9 +139,17 @@ public:
     uint8_t readGPIO(void);
     bool setPassiveActivationRetries(uint8_t maxRetries);
 
-    int8_t tgInitAsTarget();
-    int16_t tgGetData(uint8_t *buf, uint16_t len);
-    bool tgSetData(const uint8_t *buf, uint16_t len);
+    /**
+    * @brief    Init PN532 as a target
+    * @param    timeout max time to wait, 0 means no timeout
+    * @return   > 0     success
+    *           = 0     timeout
+    *           < 0     failed
+    */
+    int8_t tgInitAsTarget(uint16_t timeout = 0);
+    int16_t tgGetData(uint8_t *buf, uint8_t len);
+    int16_t tgSetData(const uint8_t *header, uint8_t hlen, const uint8_t *body, uint8_t blen);
+    bool tgSetData(const uint8_t *buf, uint8_t len);
 
     // ISO14443A functions
     bool inListPassiveTarget();
