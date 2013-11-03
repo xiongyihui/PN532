@@ -1,6 +1,6 @@
 
 #include "PN532_I2C.h"
-#include "debug.h"
+#include "PN532_debug.h"
 
 #define PN532_I2C_ADDRESS       (0x48 >> 1)
 

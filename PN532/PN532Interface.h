@@ -4,9 +4,9 @@
 #define __PN532_INTERFACE_H__
 
 #if ARDUINO >= 100
- #include "Arduino.h"
+#include "Arduino.h"
 #else
- #include "WProgram.h"
+#include "WProgram.h"
 #endif
 
 #define PN532_PREAMBLE                      (0x00)
@@ -24,11 +24,12 @@
 #define PN532_INVALID_FRAME           (-3)
 #define PN532_NO_SPACE                (-4)
 
-class PN532Interface {
+class PN532Interface
+{
 public:
     virtual void begin() = 0;
     virtual void wakeup() = 0;
-    
+
     /**
     * @brief    write a command and check ack
     * @param    buf     command to write, not contain prefix and suffix
@@ -37,7 +38,7 @@ public:
     *           not 0   failed
     */
     virtual int8_t writeCommand(const uint8_t buf[], uint8_t len) = 0;
-    
+
     /**
     * @brief    read the response of a command, strip prefix and suffix
     * @param    buf     to contain the response data
@@ -46,7 +47,7 @@ public:
     * @return   >=0     length of response without prefix and suffix
     *           <0      failed to read response
     */
-    virtual int16_t readResponse(uint8_t buf[], uint8_t len, uint16_t timeout = 1000) = 0; 
+    virtual int16_t readResponse(uint8_t buf[], uint8_t len, uint16_t timeout = 1000) = 0;
 };
 
 #endif

@@ -26,11 +26,11 @@ int8_t MACLink::readPDU(uint8_t *buf, uint16_t len)
     if (status < 0) {
         return status;
     }
-    
+
     uint16_t length = status;
     if (length < 2) {
         return -6;
     }
-    
+
     return 0;  // return length instread ?
 }
