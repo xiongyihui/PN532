@@ -87,7 +87,7 @@ void PN532::PrintHexChar(const uint8_t *data, const uint32_t numBytes)
     DMSG("        ");
     for (uint8_t i = 0; i < numBytes; i++) {
         char c = data[i];
-        if (c < 0x1f || c > 0x7f) {
+        if (c <= 0x1f || c > 0x7f) {
             DMSG('.');
         } else {
             DMSG(c);
