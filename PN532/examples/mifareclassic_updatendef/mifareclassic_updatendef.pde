@@ -36,11 +36,11 @@
     prefixes! 
 */
 // For a http://www. url:
-const char * url = "seeedstudio.com";
+const char * url = "elechouse.com";
 uint8_t ndefprefix = NDEF_URIPREFIX_HTTP_WWWDOT;
 
 // for an email address
-//const char * url = "mail@example.com";
+//const char * url = "sevice@elechouse.com";
 //uint8_t ndefprefix = NDEF_URIPREFIX_MAILTO;
 
 // for a phone number
