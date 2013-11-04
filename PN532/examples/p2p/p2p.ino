@@ -1,34 +1,17 @@
 
 #include <SPI.h>
-#include <PN532SPI.h>
-#include "PN532.h"
+#include <PN532_SPI.h>
 #include "mac_link.h"
 
 
-PN532SPI pn532spi(SPI, 10);
-PN532 nfc(pn532spi);
-MACLink link(nfc);
+PN532_SPI pn532spi(SPI, 10);
+MACLink link(pn532spi);
 
 void setup()
 {
     // put your setup code here, to run once:
     Serial.begin(115200);
     Serial.println("------- NFC Peer to Peer -----");
-
-    nfc.begin();
-
-    uint32_t versiondata = nfc.getFirmwareVersion();
-    if (! versiondata) {
-        Serial.print("Didn't find PN53x board");
-        while (1); // halt
-    }
-    // Got ok data, print it out!
-    Serial.print("Found chip PN5"); Serial.println((versiondata >> 24) & 0xFF, HEX);
-    Serial.print("Firmware ver. "); Serial.print((versiondata >> 16) & 0xFF, DEC);
-    Serial.print('.'); Serial.println((versiondata >> 8) & 0xFF, DEC);
-
-    // configure board to read RFID tags
-    nfc.SAMConfig();
 }
 
 boolean isConnectPDU(uint8_t *buf)
@@ -80,7 +63,7 @@ void server(void)
     uint8_t ptype;
 
     do {
-        if (link.readPDU(rwbuf, sizeof(rwbuf))) {
+        if (2 > link.read(rwbuf, sizeof(rwbuf))) {
             Serial.println("failed to read PDU\n");
             return;
         }
@@ -94,7 +77,7 @@ void server(void)
         }
 
         if (0 == rwbuf[0] && 0 == rwbuf[0]) {
-            if (link.writePDU(SYMM_PDU, sizeof(SYMM_PDU))) {
+            if (!link.write(SYMM_PDU, sizeof(SYMM_PDU))) {
                 Serial.println("failed to write SYMM PDU");
                 return;
             }
@@ -107,14 +90,14 @@ void server(void)
     // connection complete
     rwbuf[0] = (ssap << 2) + 0x1;
     rwbuf[1] = (0x2 << 6) + dsap;
-    link.writePDU(rwbuf, 2);
+    link.write(rwbuf, 2);
 
     do {
-        if (link.readPDU(rwbuf, sizeof(rwbuf)) < 0) {
-            break;
+        if (2 > link.read(rwbuf, sizeof(rwbuf)) < 0) {
+            return;
         }
         if (rwbuf[0] == 0 && rwbuf[1] == 0) {
-            link.writePDU(SYMM_PDU, sizeof(SYMM_PDU));
+            link.write(SYMM_PDU, sizeof(SYMM_PDU));
         } else {
             break;
         }
@@ -123,8 +106,8 @@ void server(void)
     rwbuf[0] = (ssap << 2) + 0x3;
     rwbuf[1] = (0x1 << 6) + dsap;
     rwbuf[2] = 0x01;
-    link.writePDU(rwbuf, 3);
-    if (link.readPDU(rwbuf, sizeof(rwbuf))) {
+    link.write(rwbuf, 3);
+    if (2 > link.read(rwbuf, sizeof(rwbuf))) {
         return;
     }
 
@@ -132,8 +115,8 @@ void server(void)
     snep_res[0] = (ssap << 2) + 0x3;
     snep_res[1] = dsap;
     snep_res[2] = 0x01;
-    link.writePDU(snep_res, sizeof(snep_res));
-    if (link.readPDU(rwbuf, sizeof(rwbuf))) {
+    link.write(snep_res, sizeof(snep_res));
+    if (2 > link.read(rwbuf, sizeof(rwbuf))) {
         return;
     }
 
@@ -141,60 +124,60 @@ void server(void)
     rwbuf[0] = (ssap << 2) + 0x1;
     rwbuf[1] = (0x1 << 6) + dsap;
     //    rwbuf[2] = 0x01;
-    link.writePDU(rwbuf, 2);
+    link.write(rwbuf, 2);
 #else
-    link.writePDU(SYMM_PDU, sizeof(SYMM_PDU));
+    link.write(SYMM_PDU, sizeof(SYMM_PDU));
 #endif
 
 
-    if (link.readPDU(rwbuf, sizeof(rwbuf))) {
+    if (2 > link.read(rwbuf, sizeof(rwbuf))) {
         return;
     }
     rwbuf[0] = (ssap << 2) + 0x1;
     rwbuf[1] = (0x3 << 6) + dsap;
     rwbuf[2] = 0x0;
-    link.writePDU(rwbuf, 3);
+    link.write(rwbuf, 3);
 }
 
 void client(void)
 {
-    if (link.readPDU(rwbuf, sizeof(rwbuf))) {
+    if (2 > link.read(rwbuf, sizeof(rwbuf))) {
         Serial.println("failed to read PDU\n");
         return;
     }
 
     rwbuf[0] = 0x11;
     rwbuf[1] = 0x20;
-    link.writePDU(rwbuf, 2);
+    link.write(rwbuf, 2);
 
     do {
-        if (link.readPDU(rwbuf, sizeof(rwbuf))) {
+        if (2 > link.read(rwbuf, sizeof(rwbuf))) {
             return;
         }
 
         if (0x81 == rwbuf[0] && 0x84 == rwbuf[1]) {
             break;
         }
-        link.writePDU(SYMM_PDU, sizeof(SYMM_PDU));
+        link.write(SYMM_PDU, sizeof(SYMM_PDU));
     } while (1);
 
     uint8_t hello[] = {0x13, 0x20, 0x0, 0x10, 0x2, 0x0, 0x0, 0x0, 0x18, 0xD2, 0xA, 0xB, 0x74,
                        0x65, 0x78, 0x74, 0x2F, 0x70, 0x6C, 0x61, 0x69, 0x6E, 0x68, 0x65, 0x6C, 0x6C, 0x6F, 0x20, 0x77, 0x6F, 0x72, 0x6C, 0x64
                       };
-    link.writePDU(hello, sizeof(hello));
-    link.readPDU(rwbuf, sizeof(rwbuf));
+    link.write(hello, sizeof(hello));
+    link.read(rwbuf, sizeof(rwbuf));
 
-    link.writePDU(SYMM_PDU, sizeof(SYMM_PDU));
-    link.readPDU(rwbuf, sizeof(rwbuf));
+    link.write(SYMM_PDU, sizeof(SYMM_PDU));
+    link.read(rwbuf, sizeof(rwbuf));
 
     rwbuf[0] = 0x13;
     rwbuf[1] = 0x60;
     rwbuf[2] = 0x01;
-    link.writePDU(rwbuf, 3);
-    link.readPDU(rwbuf, sizeof(rwbuf));
+    link.write(rwbuf, 3);
+    link.read(rwbuf, sizeof(rwbuf));
 
     rwbuf[0] = 0x11;
     rwbuf[1] = 0x60;
-    link.writePDU(rwbuf, 2);
-    link.readPDU(rwbuf, sizeof(rwbuf));
+    link.write(rwbuf, 2);
+    link.read(rwbuf, sizeof(rwbuf));
 }

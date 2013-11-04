@@ -13,23 +13,37 @@
 
 uint8_t LLCP::SYMM_PDU[2] = {0, 0};
 
-int8_t LLCP::activate(uint16_t timeout)
+inline uint8_t getPType(const uint8_t *buf)
 {
-	return link.activateAsTarget();
+	return ((buf[0] & 0x3) << 2) + (buf[1] >> 6);
 }
 
-int8_t LLCP::waitForConnect(uint16_t timeout)
+inline uint8_t getSSAP(const uint8_t *buf)
+{
+	return  buf[1] & 0x3f;
+}
+
+inline uint8_t getDSAP(const uint8_t *buf)
+{
+	return buf[0] >> 2;
+}
+
+int8_t LLCP::activate(uint16_t timeout)
+{
+	return link.activateAsTarget(timeout);
+}
+
+int8_t LLCP::waitForConnection(uint16_t timeout)
 {
 	uint8_t type;
-	uint8_t buf[3];
 
 	// Get CONNECT PDU
 	do {
-		if (2 > link.read(buf, sizeof(buf))) {
+		if (2 > link.read(headerBuf, headerBufLen)) {
 			return -1;
 		}
 
-		type = getPDUType(buf);
+		type = getPType(headerBuf);
 		if (PDU_CONNECT == type) {
 			break;
 		} else if (PDU_SYMM == type) {
@@ -43,31 +57,83 @@ int8_t LLCP::waitForConnect(uint16_t timeout)
 	} while (1);
 
 	// Put CC PDU
-	ssap = getDSAP(buf);
-	dsap = getSSAP(buf);
-	buf[0] = (dsap << 2) + (PDU_CC >> 2);
-	buf[1] = ((PDU_CC & 0x3) << 2) + ssap;
-	if (!link.write(buf, 2)) {
+	ssap = getDSAP(headerBuf);
+	dsap = getSSAP(headerBuf);
+	headerBuf[0] = (dsap << 2) + (PDU_CC >> 2);
+	headerBuf[1] = ((PDU_CC & 0x3) << 6) + ssap;
+	if (!link.write(headerBuf, 2)) {
 		return -2;
 	}
 
-	state = LLCP_CONNECTED;
 	return 1;
 }
 
-bool LLCP::write(const uint8_t *buf, uint8_t len)
+int8_t LLCP::waitForDisconnection(uint16_t timeout)
 {
 	uint8_t type;
-	uint8_t header[3];
 
-	if (2 != link.read(header, sizeof(header))) {
+	// Get DISC PDU
+	do {
+		if (2 > link.read(headerBuf, headerBufLen)) {
+			return -1;
+		}
+
+		type = getPType(headerBuf);
+		if (PDU_DISC == type) {
+			break;
+		} else if (PDU_SYMM == type) {
+			if (!link.write(SYMM_PDU, sizeof(SYMM_PDU))) {
+				return -2;
+			}
+		} else {
+			return -3;
+		}
+
+	} while (1);
+
+	// Put DM PDU
+	// ssap = getDSAP(headerBuf);
+	// dsap = getSSAP(headerBuf);
+	headerBuf[0] = (dsap << 2) + (PDU_DM >> 2);
+	headerBuf[1] = ((PDU_DM & 0x3) << 6) + ssap;
+	if (!link.write(headerBuf, 2)) {
+		return -2;
+	}
+
+	return 1;
+}
+
+int8_t LLCP::connect(uint16_t timeout)
+{
+	return -1;
+}
+
+int8_t LLCP::disconnect(uint16_t timeout)
+{
+	return -1;
+}
+
+bool LLCP::write(const uint8_t *header, uint8_t hlen, const uint8_t *body, uint8_t blen)
+{
+	uint8_t type;
+	uint8_t buf[3];
+
+	if (2 != link.read(buf, sizeof(buf))) {
 		return false;
 	}
 
-	header[0] = (dsap << 2) + (PDU_RR >> 2);
-	header[1] = ((PDU_RR & 0x3) << 2) + ssap;
-	header[2] = 0x01;		// sequence
-	if (!link.write(header, 3, buf, len)) {
+	if (headerBufLen < (hlen + 3)) {
+		return false;
+	}
+
+	for (int8_t i = hlen - 1; i >= 0; i--) {
+		headerBuf[i + 3] = header[i];
+	}
+
+	headerBuf[0] = (dsap << 2) + (PDU_I >> 2);
+	headerBuf[1] = ((PDU_I & 0x3) << 6) + ssap;
+	headerBuf[2] = 0x01;		// sequence
+	if (!link.write(headerBuf, 3 + hlen, body, blen)) {
 		return false;
 	}
 
@@ -79,10 +145,6 @@ int16_t LLCP::read(uint8_t *buf, uint8_t length)
 {
 	uint8_t type;
 	uint16_t status;
-
-	if (LLCP_CONNECTED != state) {
-		return -1;
-	}
 
 	// Get INFO PDU
 	do {
@@ -104,36 +166,18 @@ int16_t LLCP::read(uint8_t *buf, uint8_t length)
 
 	} while (1);
 
-	uint8_t length = status - 3;
+	uint8_t len = status - 3;
 	ssap = getDSAP(buf);
 	dsap = getSSAP(buf);
 	buf[0] = (dsap << 2) + (PDU_RR >> 2);
-	buf[1] = ((PDU_RR & 0x3) << 2) + ssap;
+	buf[1] = ((PDU_RR & 0x3) << 6) + ssap;
 	buf[2] = 0x01;		// sequence
 	if (!link.write(buf, 3)) {
 		return -2;
 	}
 
-	memcpy(buf, buf + 3, length);
-	return length;
-}
-
-inline uint8_t getPType(const uint8_t *buf)
-{
-	return ((buf[0] & 0x3) << 2) + (buf[1] >> 6);
-}
-
-inline uint8_t getSSAP(const uint8_t *buf)
-{
-	return  buf[1] & 0x3f;
-}
-
-inline uint8_t getDSAP(const uint8_t *buf)
-{
-	return buf[0] >> 2;
-}
-
-uint8_t LLCP::packPDU(uint8_t type, uint8_t *buf, uint8_t length)
-{
-
+	for (uint8_t i = 0; i < len; i++) {
+		buf[i] = buf[i + 3];
+	}
+	return len;
 }

@@ -148,8 +148,7 @@ public:
     */
     int8_t tgInitAsTarget(uint16_t timeout = 0);
     int16_t tgGetData(uint8_t *buf, uint8_t len);
-    int16_t tgSetData(const uint8_t *header, uint8_t hlen, const uint8_t *body, uint8_t blen);
-    bool tgSetData(const uint8_t *buf, uint8_t len);
+    bool tgSetData(const uint8_t *header, uint8_t hlen, const uint8_t *body = 0, uint8_t blen = 0);
 
     // ISO14443A functions
     bool inListPassiveTarget();
@@ -172,11 +171,18 @@ public:
     static void PrintHex(const uint8_t *data, const uint32_t numBytes);
     static void PrintHexChar(const uint8_t *pbtData, const uint32_t numBytes);
 
+    uint8_t *getBuffer(uint8_t *len) {
+        *len = sizeof(pn532_packetbuffer) - 4;
+        return pn532_packetbuffer;
+    };
+
 private:
     uint8_t _uid[7];  // ISO14443A uid
     uint8_t _uidLen;  // uid len
     uint8_t _key[6];  // Mifare Classic key
     uint8_t inListedTag; // Tg number of inlisted tag.
+
+    uint8_t pn532_packetbuffer[64];
 
     PN532Interface *_interface;
 };

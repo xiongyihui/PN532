@@ -4,13 +4,12 @@
 
 #include "mac_link.h"
 
-#define LLCP_CONNECTED 		1
-#define LLCP_DISCONNECTED	0
+#define LLCP_DEFAULT_TIMEOUT  20000
 
 class LLCP {
 public:
 	LLCP(PN532Interface &interface) : link(interface) {
-		state = LLCP_DISCONNECTED;
+        headerBuf = link.getHeaderBuffer(&headerBufLen);
 	};
 
 	/**
@@ -20,16 +19,26 @@ public:
     *           = 0     timeout
     *           < 0     failed
     */
-	int8_t activate(uint16_t timeout);
+	int8_t activate(uint16_t timeout = 0);
+
+    int8_t waitForConnection(uint16_t timeout = LLCP_DEFAULT_TIMEOUT);
+
+    int8_t waitForDisconnection(uint16_t timeout = LLCP_DEFAULT_TIMEOUT);
+
+    int8_t connect(uint16_t timeout = LLCP_DEFAULT_TIMEOUT);
+
+    int8_t disconnect(uint16_t timeout = LLCP_DEFAULT_TIMEOUT);
 
 	/**
     * @brief    write a packet, the packet should be less than (255 - 2) bytes
-    * @param    buf     the packet
-    * @param    len     length
+    * @param    header  packet header
+    * @param    hlen    length of header
+    * @param    body    packet body
+    * @param    blen    length of body
     * @return   true    success
     *           false   failed
     */
-    bool write(const uint8_t *buf, uint8_t len);
+    bool write(const uint8_t *header, uint8_t hlen, const uint8_t *body = 0, uint8_t blen = 0);
 
     /**
     * @brief    read a  packet, the packet will be less than (255 - 2) bytes
@@ -42,18 +51,13 @@ public:
 
 
 private:
-	/**
-	* @brief 	get a PDU's type
-	* @param	buf 	the buffer which contain a PDU
-	* @return   PDU's type
-	*/
-	uint8_t getPDUType(const uint8_t *buf);
-
 	MACLink link;
-	int8_t  state;
 	uint8_t ssap;
 	uint8_t dsap;
-	uint8_t SYMM_PDU[2];
+    uint8_t *headerBuf;
+    uint8_t headerBufLen;
+
+	static uint8_t SYMM_PDU[2];
 };
 
 #endif // __LLCP_H__

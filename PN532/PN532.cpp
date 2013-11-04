@@ -35,9 +35,6 @@
 
 #define HAL(func)   (_interface->func)
 
-#define PN532_PACKBUFFSIZ 128
-uint8_t pn532_packetbuffer[PN532_PACKBUFFSIZ];
-
 PN532::PN532(PN532Interface &interface)
 {
     _interface = &interface;
@@ -653,44 +650,34 @@ uint8_t PN532::mifareultralight_ReadPage (uint8_t page, uint8_t *buffer)
 /**************************************************************************/
 bool PN532::inDataExchange(uint8_t *send, uint8_t sendLength, uint8_t *response, uint8_t *responseLength)
 {
-    if (sendLength > PN532_PACKBUFFSIZ - 2) {
-        DMSG("APDU length too long for packet buffer");
-
-        return false;
-    }
     uint8_t i;
 
     pn532_packetbuffer[0] = 0x40; // PN532_COMMAND_INDATAEXCHANGE;
     pn532_packetbuffer[1] = inListedTag;
-    for (i = 0; i < sendLength; ++i) {
-        pn532_packetbuffer[i + 2] = send[i];
-    }
 
-    if (HAL(writeCommand)(pn532_packetbuffer, sendLength + 2)) {
+    if (HAL(writeCommand)(pn532_packetbuffer, 2, send, sendLength)) {
         return false;
     }
 
-
-    int16_t status = HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), 1000);
+    int16_t status = HAL(readResponse)(response, *responseLength, 1000);
     if (status < 0) {
         return false;
     }
 
-    uint8_t length = status;
-
-    if ((pn532_packetbuffer[0] & 0x3f) != 0) {
+    if ((response[0] & 0x3f) != 0) {
         DMSG("Status code indicates an error\n");
         return false;
     }
 
+    uint8_t length = status;
     length -= 1;
 
     if (length > *responseLength) {
         length = *responseLength; // silent truncation...
     }
 
-    for (i = 0; i < length; ++i) {
-        response[i] = pn532_packetbuffer[1 + i];
+    for (uint8_t i = 0; i < length; i++) {
+        response[i] = response[i + 1];
     }
     *responseLength = length;
 
@@ -734,7 +721,7 @@ bool PN532::inListPassiveTarget()
  */
 int8_t PN532::tgInitAsTarget(uint16_t timeout)
 {
-    static const uint8_t command[] = {
+    const uint8_t command[] = {
         PN532_COMMAND_TGINITASTARGET,
         0,
         0x00, 0x00,         //SENS_RES
@@ -767,43 +754,44 @@ int8_t PN532::tgInitAsTarget(uint16_t timeout)
 
 int16_t PN532::tgGetData(uint8_t *buf, uint8_t len)
 {
-    pn532_packetbuffer[0] = PN532_COMMAND_TGGETDATA;
+    buf[0] = PN532_COMMAND_TGGETDATA;
 
-    if (HAL(writeCommand)(pn532_packetbuffer, 1)) {
+    if (HAL(writeCommand)(buf, 1)) {
         return -1;
     }
 
-    int16_t status = HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), 3000);
-    if (0 > status) {
+    int16_t status = HAL(readResponse)(buf, len, 3000);
+    if (0 >= status) {
         return status;
     }
 
-    uint16_t length = status;
-    if (length > len) {
-        return -4;
-    }
+    uint16_t length = status - 1;
 
-    if (pn532_packetbuffer[0] != 0) {
+
+    if (buf[0] != 0) {
         DMSG("status is not ok\n");
         return -5;
     }
 
-    memcpy(buf, pn532_packetbuffer + 1, length - 1);
+    for (uint8_t i = 0; i < length; i++) {
+        buf[i] = buf[i + 1];
+    }
 
-
-    return length - 1;
+    return length;
 }
 
-bool PN532::tgSetData(const uint8_t *buf, uint8_t len)
+bool PN532::tgSetData(const uint8_t *header, uint8_t hlen, const uint8_t *body, uint8_t blen)
 {
-    pn532_packetbuffer[0] = PN532_COMMAND_TGSETDATA;
-    if (len > (sizeof(pn532_packetbuffer) + 1)) {
+    if (hlen > (sizeof(pn532_packetbuffer) - 1)) {
         return false;
     }
 
-    memcpy(pn532_packetbuffer + 1, buf, len);
+    for (int8_t i = hlen - 1; i >= 0; i--){
+        pn532_packetbuffer[i + 1] = header[i];
+    }
+    pn532_packetbuffer[0] = PN532_COMMAND_TGSETDATA;
 
-    if (HAL(writeCommand)(pn532_packetbuffer, len + 1)) {
+    if (HAL(writeCommand)(pn532_packetbuffer, hlen + 1, body, blen)) {
         return false;
     }
 

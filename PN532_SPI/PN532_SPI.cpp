@@ -30,11 +30,13 @@ void PN532_SPI::wakeup()
     digitalWrite(_ss, HIGH);
 }
 
-int8_t PN532_SPI::writeCommand(const uint8_t buf[], uint8_t len)
-{
-    command = buf[0];
-    writeFrame(buf, len);
 
+
+int8_t PN532_SPI::writeCommand(const uint8_t *header, uint8_t hlen, const uint8_t *body, uint8_t blen)
+{
+    command = header[0];
+    writeFrame(header, hlen, body, blen);
+    
     uint8_t timeout = PN532_ACK_WAIT_TIME;
     while (!isReady()) {
         delay(1);
@@ -140,7 +142,7 @@ boolean PN532_SPI::isReady()
     return status;
 }
 
-void PN532_SPI::writeFrame(const uint8_t buf[], uint8_t len)
+void PN532_SPI::writeFrame(const uint8_t *header, uint8_t hlen, const uint8_t *body, uint8_t blen)
 {
     digitalWrite(_ss, LOW);
     delay(2);               // wake up PN532
@@ -150,7 +152,7 @@ void PN532_SPI::writeFrame(const uint8_t buf[], uint8_t len)
     write(PN532_STARTCODE1);
     write(PN532_STARTCODE2);
 
-    uint8_t length = len + 1;   // length of data field: TFI + DATA
+    uint8_t length = hlen + blen + 1;   // length of data field: TFI + DATA
     write(length);
     write(~length + 1);         // checksum of length
 
@@ -159,11 +161,17 @@ void PN532_SPI::writeFrame(const uint8_t buf[], uint8_t len)
 
     DMSG("write: ");
 
-    for (uint8_t i = 0; i < len; i++) {
-        write(buf[i]);
-        sum += buf[i];
+    for (uint8_t i = 0; i < hlen; i++) {
+        write(header[i]);
+        sum += header[i];
 
-        DMSG_HEX(buf[i]);
+        DMSG_HEX(header[i]);
+    }
+    for (uint8_t i = 0; i < blen; i++) {
+        write(body[i]);
+        sum += body[i];
+
+        DMSG_HEX(body[i]);
     }
 
     uint8_t checksum = ~sum + 1;        // checksum of TFI + DATA

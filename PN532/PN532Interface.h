@@ -32,12 +32,14 @@ public:
 
     /**
     * @brief    write a command and check ack
-    * @param    buf     command to write, not contain prefix and suffix
-    * @param    len     lenght of command
+    * @param    header  packet header
+    * @param    hlen    length of header
+    * @param    body    packet body
+    * @param    blen    length of body
     * @return   0       success
     *           not 0   failed
     */
-    virtual int8_t writeCommand(const uint8_t buf[], uint8_t len) = 0;
+    virtual int8_t writeCommand(const uint8_t *header, uint8_t hlen, const uint8_t *body = 0, uint8_t blen = 0) = 0;
 
     /**
     * @brief    read the response of a command, strip prefix and suffix
