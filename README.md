@@ -19,8 +19,8 @@ It works with:
 + Support [mbed platform](http://goo.gl/kGPovZ)
 
 ### Getting Started
-1. Download [zip file](https://github.com/Seeed-Studio/PN532/archive/master.zip) and 
-extract the three folders(PN532, PN532_SPI and PN532_I2C) into libraries of Arduino.
+1. **Download [zip file](https://github.com/Seeed-Studio/PN532/archive/master.zip) and 
+extract the three folders(PN532, PN532_SPI, PN532_HSU and PN532_I2C) into libraries of Arduino.**
 2. Follow the examples of the library
 
 ### To do
