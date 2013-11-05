@@ -39,7 +39,7 @@
     prefixes!
 */
 // For a http://www. url:
-const char * url = "seeedstudio.com";
+const char * url = "elechouse.com";
 uint8_t ndefprefix = NDEF_URIPREFIX_HTTP_WWWDOT;
 
 // for an email address
