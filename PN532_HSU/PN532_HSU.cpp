@@ -1,6 +1,6 @@
 
 #include "PN532_HSU.h"
-#include "debug.h"
+#include "PN532_debug.h"
 
 
 PN532_HSU::PN532_HSU(HardwareSerial &serial)
@@ -33,7 +33,7 @@ void PN532_HSU::wakeup()
 
 }
 
-int8_t PN532_HSU::writeCommand(const uint8_t buf[], uint8_t len)
+int8_t PN532_HSU::writeCommand(const uint8_t *header, uint8_t hlen, const uint8_t *body, uint8_t blen)
 {
 
     /** dump serial buffer */
@@ -45,22 +45,27 @@ int8_t PN532_HSU::writeCommand(const uint8_t buf[], uint8_t len)
         DMSG_HEX(ret);
     }
 
-    command = buf[0];
+    command = header[0];
     
     _serial->write(PN532_PREAMBLE);
     _serial->write(PN532_STARTCODE1);
     _serial->write(PN532_STARTCODE2);
     
-    uint8_t length = len + 1;   // length of data field: TFI + DATA
+    uint8_t length = hlen + blen + 1;   // length of data field: TFI + DATA
     _serial->write(length);
     _serial->write(~length + 1);         // checksum of length
     
     _serial->write(PN532_HOSTTOPN532);
     uint8_t sum = PN532_HOSTTOPN532;    // sum of TFI + DATA
     
-    _serial->write(buf, len);
-    for (uint8_t i = 0; i < len; i++) {
-        sum += buf[i];
+    _serial->write(header, hlen);
+    for (uint8_t i = 0; i < hlen; i++) {
+        sum += header[i];
+    }
+
+    _serial->write(body, blen);
+    for (uint8_t i = 0; i < blen; i++) {
+        sum += body[i];
     }
     
     uint8_t checksum = ~sum + 1;            // checksum of TFI + DATA
