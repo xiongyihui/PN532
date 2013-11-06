@@ -2,36 +2,13 @@
 /*!
     @file     PN532.cpp
     @author   Adafruit Industries & Seeed Studio
-    @license  BSD (see license.txt)
-
-
-    @section  HISTORY
-    v1.5 - Modified to work with I2C and SPI
-
-    v1.4 - Added setPassiveActivationRetries()
-
-    v1.3 - Modified to work with I2C
-
-    v1.2 - Added writeGPIO()
-         - Added readGPIO()
-
-    v1.1 - Changed readPassiveTargetID() to handle multiple UID sizes
-         - Added the following helper functions for text display
-             static void PrintHex(const uint8_t * data, const uint32_t numBytes)
-             static void PrintHexChar(const uint8_t * pbtData, const uint32_t numBytes)
-         - Added the following Mifare Classic functions:
-             bool mifareclassic_IsFirstBlock (uint32_t uiBlock)
-             bool mifareclassic_IsTrailerBlock (uint32_t uiBlock)
-             uint8_t mifareclassic_AuthenticateBlock (uint8_t * uid, uint8_t uidLen, uint32_t blockNumber, uint8_t keyNumber, uint8_t * keyData)
-             uint8_t mifareclassic_ReadDataBlock (uint8_t blockNumber, uint8_t * data)
-             uint8_t mifareclassic_WriteDataBlock (uint8_t blockNumber, uint8_t * data)
-         - Added the following Mifare Ultalight functions:
-             uint8_t mifareultralight_ReadPage (uint8_t page, uint8_t * buffer)
+    @license  BSD
 */
 /**************************************************************************/
 
 #include "PN532.h"
 #include "PN532_debug.h"
+#include <string.h>
 
 #define HAL(func)   (_interface->func)
 

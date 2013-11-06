@@ -2,32 +2,15 @@
 /*!
     @file     PN532.h
     @author   Adafruit Industries & Seeed Studio
-    @license  BSD (see license.txt)
-
-
-    @section  HISTORY
-    v1.5 - Modified to work with I2C and SPI
-
-    v1.3  - Modified to work with I2C
-
-    v1.1  - Added full command list
-          - Added 'verbose' mode flag to constructor to toggle debug output
-          - Changed readPassiveTargetID() to return variable length values
-
+    @license  BSD
 */
 /**************************************************************************/
 
-#ifndef PN532_h
-#define PN532_h
+#ifndef __PN532_H__
+#define __PN532_H__
 
-#if ARDUINO >= 100
-#include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
-
+#include <stdint.h>
 #include "PN532Interface.h"
-
 
 // PN532 Commands
 #define PN532_COMMAND_DIAGNOSE              (0x00)
