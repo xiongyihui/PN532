@@ -17,14 +17,12 @@ It works with
 + Support [mbed platform](http://goo.gl/kGPovZ)
 
 ### Getting Started
-1. Download [zip file](https://github.com/Seeed-Studio/PN532/archive/master.zip) and 
-extract the three folders(PN532, PN532_SPI, PN532_I2C and PN532_HSU) into libraries of Arduino.
-2. Follow the examples of the library
+1. Download [zip file](http://goo.gl/F6beRM) and 
+extract the 4 folders(PN532, PN532_SPI, PN532_I2C and PN532_HSU) into Arduino's libraries.
+2. Downlaod [Don's NDEF library](http://goo.gl/ewxeAe) and extract it intro Arduino's libraries.
+3. Follow the examples of the two libraries.
 
 
 ### To do
 + Card emulation
-
-
-
 
