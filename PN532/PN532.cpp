@@ -38,11 +38,22 @@ void PN532::begin()
 /**************************************************************************/
 void PN532::PrintHex(const uint8_t *data, const uint32_t numBytes)
 {
+#ifdef ARDUINO
     for (uint8_t i = 0; i < numBytes; i++) {
-        DMSG("0x");
-        DMSG_HEX(data[i]);
+        if (data[i] < 0x10) {
+            Serial.print(" 0");
+        } else {
+            Serial.print(' ');
+        }
+        Serial.print(data[i], HEX);
     }
-    DMSG("\n");
+    Serial.println("");
+#else
+    for (uint8_t i = 0; i < numBytes; i++) {
+        printf(" %2X", data[i]);
+    }
+    printf("\n");
+#endif
 }
 
 /**************************************************************************/
@@ -58,19 +69,40 @@ void PN532::PrintHex(const uint8_t *data, const uint32_t numBytes)
 /**************************************************************************/
 void PN532::PrintHexChar(const uint8_t *data, const uint32_t numBytes)
 {
+#ifdef ARDUINO
     for (uint8_t i = 0; i < numBytes; i++) {
-        DMSG_HEX(data[i]);
+        if (data[i] < 0x10) {
+            Serial.print(" 0");
+        } else {
+            Serial.print(' ');
+        }
+        Serial.print(data[i], HEX);
     }
-    DMSG("        ");
+    Serial.print("    ");
     for (uint8_t i = 0; i < numBytes; i++) {
         char c = data[i];
         if (c <= 0x1f || c > 0x7f) {
-            DMSG('.');
+            Serial.print('.');
         } else {
-            DMSG(c);
+            Serial.print(c);
         }
     }
-
+    Seria.println("");
+#else
+    for (uint8_t i = 0; i < numBytes; i++) {
+        printf(" %2X", data[i]);
+    }
+    printf("    ");
+    for (uint8_t i = 0; i < numBytes; i++) {
+        char c = data[i];
+        if (c <= 0x1f || c > 0x7f) {
+            printf(".");
+        } else {
+            printf("%c", c);
+        }
+        printf("\n");
+    }
+#endif
 }
 
 /**************************************************************************/
