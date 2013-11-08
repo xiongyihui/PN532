@@ -1,11 +1,10 @@
 ## NFC library for Arduino
 
 This is an Arduino library for PN532 to use NFC technology.
-It works with
+It is for [NFC Shield](http://goo.gl/Cac2OH) and [Xadow NFC](http://goo.gl/qBZMt0).
 
-+ [NFC Shield](http://goo.gl/Cac2OH)
-+ [Xadow NFC](http://goo.gl/qBZMt0)
-+ [PN532 NFC/RFID controller breakout board](http://goo.gl/tby9Sw)
+[![NFC Shield](http://www.seeedstudio.com/depot/bmz_cache/a/abe9904d46e29565fb15ec36e17a4a52.image.114x85.jpg)](http://goo.gl/Cac2OH)
+[![Xadow NFC](http://www.seeedstudio.com/depot/bmz_cache/d/d5f551a693fee5342877864ca5580cb6.image.114x85.jpg)](http://goo.gl/qBZMt0)
 
 ### Features
 + Support I2C, SPI and HSU of PN532
@@ -20,7 +19,7 @@ extract the 4 folders(PN532, PN532_SPI, PN532_I2C and PN532_HSU) into Arduino's 
 2. Downlaod [Don's NDEF library](http://goo.gl/ewxeAe) and extract it intro Arduino's libraries.
 3. Follow the examples of the two libraries.
 
-### To do
+### Doing
 + Card emulation
 
 ### Contribution
