@@ -6,6 +6,7 @@
 */
 /**************************************************************************/
 
+#include "Arduino.h"
 #include "PN532.h"
 #include "PN532_debug.h"
 #include <string.h>
@@ -87,7 +88,7 @@ void PN532::PrintHexChar(const uint8_t *data, const uint32_t numBytes)
             Serial.print(c);
         }
     }
-    Seria.println("");
+    Serial.println("");
 #else
     for (uint8_t i = 0; i < numBytes; i++) {
         printf(" %2X", data[i]);
@@ -727,6 +728,23 @@ bool PN532::inListPassiveTarget()
     return true;
 }
 
+int8_t PN532::tgInitAsTarget(const uint8_t* command, const uint8_t len, const uint16_t timeout){
+  
+  int8_t status = HAL(writeCommand)(command, len);
+    if (status < 0) {
+        return -1;
+    }
+
+    status = HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), timeout);
+    if (status > 0) {
+        return 1;
+    } else if (PN532_TIMEOUT == status) {
+        return 0;
+    } else {
+        return -2;
+    }
+}
+
 /**
  * Peer to Peer
  */
@@ -747,20 +765,7 @@ int8_t PN532::tgInitAsTarget(uint16_t timeout)
 
         0x06, 0x46,  0x66, 0x6D, 0x01, 0x01, 0x10, 0x00// LLCP magic number and version parameter
     };
-
-    int8_t status = HAL(writeCommand)(command, sizeof(command));
-    if (status < 0) {
-        return -1;
-    }
-
-    status = HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), timeout);
-    if (status > 0) {
-        return 1;
-    } else if (PN532_TIMEOUT == status) {
-        return 0;
-    } else {
-        return -2;
-    }
+    return tgInitAsTarget(command, sizeof(command), timeout);
 }
 
 int16_t PN532::tgGetData(uint8_t *buf, uint8_t len)
