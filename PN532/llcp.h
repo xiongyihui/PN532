@@ -12,7 +12,8 @@ class LLCP {
 public:
 	LLCP(PN532Interface &interface) : link(interface) {
         headerBuf = link.getHeaderBuffer(&headerBufLen);
-        sequence = 0;
+        ns = 0;
+        nr = 0;
 	};
 
 	/**
@@ -64,7 +65,8 @@ private:
 	uint8_t dsap;
     uint8_t *headerBuf;
     uint8_t headerBufLen;
-    uint8_t sequence;
+    uint8_t ns;         // Number of I PDU Sent
+    uint8_t nr;         // Number of I PDU Received
 
 	static uint8_t SYMM_PDU[2];
 };
