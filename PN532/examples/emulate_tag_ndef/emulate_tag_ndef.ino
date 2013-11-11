@@ -14,23 +14,28 @@ void setup()
   Serial.begin(115200);
   Serial.println("------- Emulate Tag --------");
   
+  NdefMessage message = NdefMessage();
+  message.addUriRecord("http://www.seeedstudio.com");
+  int messageSize = message.getEncodedSize();
+  if (messageSize > sizeof(ndefBuf)) {
+      Serial.println("ndefBuf is too small");
+      while (1) { }
+  }
+
+  message.encode(ndefBuf);
+  
+  // comment out this command for no ndef message
+  nfc.setNdefFile(ndefBuf, messageSize);
+  
   nfc.init();
 }
 
 void loop(){
-    NdefMessage message = NdefMessage();
-    message.addUriRecord("http://www.seeedstudio.com");
-    int messageSize = message.getEncodedSize();
-    if (messageSize > sizeof(ndefBuf)) {
-        Serial.println("ndefBuf is too small");
-        while (1) { }
-    }
-
-    message.encode(ndefBuf);
-  
-    uint8_t uid[3] = { 0x12, 0x34, 0x56}  ;
-  
-    nfc.emulate(ndefBuf, messageSize, uid);
+    uint8_t uid[3] = { 0x12, 0x34, 0x56 };
+ 
+    // uncomment for overriding ndef in case a write to this tag occured
+    // nfc.setNdefFile(ndefBuf, messageSize); 
+    nfc.emulate(uid);
 
     delay(1000);
 }
