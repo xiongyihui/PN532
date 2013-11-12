@@ -106,6 +106,8 @@ void EmulateTag::emulate(const uint8_t* uid){
     return;
   }
 
+  tagWrittenByInitiator = false;
+
   uint8_t rwbuf[128];
   uint8_t sendlen;
   int16_t status;
@@ -183,6 +185,7 @@ void EmulateTag::emulate(const uint8_t* uid){
       else{
 	memcpy(ndef_file + (p1 << 8) + p2, rwbuf + C_APDU_DATA, lc);
 	setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
+	tagWrittenByInitiator = true;
       }
       break;
     default:
