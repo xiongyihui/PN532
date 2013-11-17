@@ -77,7 +77,11 @@ void EmulateTag::setNdefFile(const uint8_t* ndef, const int16_t ndefLength){
   memcpy(ndef_file+2, ndef, ndefLength);
 }
 
-void EmulateTag::emulate(const uint8_t* uid){
+void EmulateTag::setUid(uint8_t* uid){
+  uidPtr = uid;
+}
+
+bool EmulateTag::emulate(const uint16_t tgInitAsTargetTimeout){
 
   uint8_t command[] = {
         PN532_COMMAND_TGINITASTARGET,
@@ -95,15 +99,15 @@ void EmulateTag::emulate(const uint8_t* uid){
 
         0, // length of general bytes
         0  // length of historical bytes
-	  };
+  };
 
-  if(uid != 0){  // if uid is set copy 3 bytes to nfcid1
-    memcpy(command + 4, uid, 3);
+  if(uidPtr != 0){  // if uid is set copy 3 bytes to nfcid1
+    memcpy(command + 4, uidPtr, 3);
   }
 
-  if(1 != pn532.tgInitAsTarget(command,sizeof(command))){
-    DMSG("tgInitAsTarget failed!");
-    return;
+  if(1 != pn532.tgInitAsTarget(command,sizeof(command), tgInitAsTargetTimeout)){
+    DMSG("tgInitAsTarget failed or timed out!");
+    return false;
   }
 
   tagWrittenByInitiator = false;
@@ -113,18 +117,20 @@ void EmulateTag::emulate(const uint8_t* uid){
   int16_t status;
   tag_file currentFile = NONE;
   uint16_t cc_size = sizeof(compatibility_container);
+  bool runLoop = true;
 
-  while(1){
-
+  while(runLoop){
     status = pn532.tgGetData(rwbuf, sizeof(rwbuf));
     if(status < 0){
       DMSG("tgGetData failed!\n");
-      return;
+      pn532.inRelease();
+      return true;
     }
 
     uint8_t p1 = rwbuf[C_APDU_P1];
     uint8_t p2 = rwbuf[C_APDU_P2];
     uint8_t lc = rwbuf[C_APDU_LC];
+    uint16_t p1p2_length = ((int16_t) p1 << 8) + p2;
 
     switch(rwbuf[C_APDU_INS]){
     case ISO7816_SELECT_FILE:
@@ -161,29 +167,29 @@ void EmulateTag::emulate(const uint8_t* uid){
 	setResponse(TAG_NOT_FOUND, rwbuf, &sendlen);
 	break;
       case CC:
-	if((int16_t)(p1 << 8) + p2 > NDEF_MAX_LENGTH){
+	if( p1p2_length > NDEF_MAX_LENGTH){
 	  setResponse(END_OF_FILE_BEFORE_REACHED_LE_BYTES, rwbuf, &sendlen);
 	}else {
-	  memcpy(rwbuf,compatibility_container + (p1 << 8) + p2, lc);
+	  memcpy(rwbuf,compatibility_container + p1p2_length, lc);
 	  setResponse(COMMAND_COMPLETE, rwbuf + lc, &sendlen, lc);
 	}
 	break;
       case NDEF:
-	if((int16_t)(p1 << 8) + p2 > NDEF_MAX_LENGTH){
+	if( p1p2_length > NDEF_MAX_LENGTH){
 	  setResponse(END_OF_FILE_BEFORE_REACHED_LE_BYTES, rwbuf, &sendlen);
 	}else {
-	  memcpy(rwbuf, ndef_file + (p1 << 8) + p2, lc);
+	  memcpy(rwbuf, ndef_file + p1p2_length, lc);
 	  setResponse(COMMAND_COMPLETE, rwbuf + lc, &sendlen, lc);
 	}
 	break;
       }
       break;    
     case ISO7816_UPDATE_BINARY:
-      if((int16_t)(p1 << 8) + p2 > NDEF_MAX_LENGTH){
+      if( p1p2_length > NDEF_MAX_LENGTH){
 	setResponse(MEMORY_FAILURE, rwbuf, &sendlen);
       }
       else{
-	memcpy(ndef_file + (p1 << 8) + p2, rwbuf + C_APDU_DATA, lc);
+	memcpy(ndef_file + p1p2_length, rwbuf + C_APDU_DATA, lc);
 	setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
 	tagWrittenByInitiator = true;
       }
@@ -197,9 +203,12 @@ void EmulateTag::emulate(const uint8_t* uid){
     status = pn532.tgSetData(rwbuf, sendlen);
     if(status < 0){
       DMSG("tgSetData failed\n!");
-      return;
+      pn532.inRelease();
+      return true;
     }
   }
+  pn532.inRelease();
+  return true;
 }
 
 void EmulateTag::setResponse(responseCommand cmd, uint8_t* buf, uint8_t* sendlen, uint8_t sendlenOffset){
