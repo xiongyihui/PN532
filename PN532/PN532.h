@@ -135,6 +135,8 @@ public:
     int16_t tgGetData(uint8_t *buf, uint8_t len);
     bool tgSetData(const uint8_t *header, uint8_t hlen, const uint8_t *body = 0, uint8_t blen = 0);
 
+    int16_t inRelease(const uint8_t relevantTarget = 0);
+
     // ISO14443A functions
     bool inListPassiveTarget();
     bool readPassiveTargetID(uint8_t cardbaudrate, uint8_t *uid, uint8_t *uidLength, uint16_t timeout = 1000);

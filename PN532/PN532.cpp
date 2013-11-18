@@ -821,3 +821,18 @@ bool PN532::tgSetData(const uint8_t *header, uint8_t hlen, const uint8_t *body, 
 
     return true;
 }
+
+int16_t PN532::inRelease(const uint8_t relevantTarget){
+
+    pn532_packetbuffer[0] = PN532_COMMAND_INRELEASE;
+    pn532_packetbuffer[1] = relevantTarget;
+
+    if (HAL(writeCommand)(pn532_packetbuffer, 2)) {
+        return 0;
+    }
+
+    // read data packet
+    return HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer));
+}
+
+
