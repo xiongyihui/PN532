@@ -24,6 +24,9 @@
 #include <PN532_SPI.h>
 #include "PN532.h"
 
+PN532_SPI pn532spi(SPI, 10);
+PN532 nfc(pn532spi);
+
 void setup(void) {
   Serial.begin(115200);
   Serial.println("Hello!");
