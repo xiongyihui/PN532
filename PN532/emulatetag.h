@@ -8,7 +8,6 @@
 */
 /**************************************************************************/
 
-
 #ifndef __EMULATETAG_H__
 #define __EMULATETAG_H__
 
@@ -44,6 +43,14 @@ EmulateTag(PN532Interface &interface) : pn532(interface), uidPtr(0), tagWrittenB
 
   void setTagWriteable(bool setWriteable){
     tagWriteable = setWriteable;
+  }
+
+  uint8_t* getNdefFilePtr(){
+    return ndef_file;
+  }
+
+  uint8_t getNdefMaxLength(){
+    return NDEF_MAX_LENGTH;
   }
 
 private:
