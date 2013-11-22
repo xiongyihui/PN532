@@ -46,12 +46,14 @@ void loop(){
     
     // start emulation (blocks)
     nfc.emulate();
-    
+        
     // or start emulation with timeout
-    
-    if(!nfc.emulate(1000)){ // timeout 1 second
+    /*if(!nfc.emulate(1000)){ // timeout 1 second
       Serial.println("timed out");
-    }
+    }*/
+    
+    // deny writing to the tag
+    // nfc.setTagWriteable(false);
     
     if(nfc.writeOccured()){
        Serial.println("\nWrite occured !");

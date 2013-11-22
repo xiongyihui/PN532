@@ -48,19 +48,6 @@
 
 typedef enum { NONE, CC, NDEF } tag_file;   // CC ... Compatibility Container
 
-const uint8_t compatibility_container[] = {
-  0, 0x0F,
-  0x20,
-  0, 0x54,
-  0, 0xFF,
-  0x04,
-  0x06,
-  0xE1, 0x04,
-  0xFF, 0xFE,
-  0x00,
-  0x00
-};
-
 bool EmulateTag::init(){
   pn532.begin();
   return pn532.SAMConfig();
@@ -108,6 +95,23 @@ bool EmulateTag::emulate(const uint16_t tgInitAsTargetTimeout){
   if(1 != pn532.tgInitAsTarget(command,sizeof(command), tgInitAsTargetTimeout)){
     DMSG("tgInitAsTarget failed or timed out!");
     return false;
+  }
+
+  uint8_t compatibility_container[] = {
+    0, 0x0F,
+    0x20,
+    0, 0x54,
+    0, 0xFF,
+    0x04,       // T
+    0x06,       // L
+    0xE1, 0x04, // File identifier
+    ((NDEF_MAX_LENGTH & 0xFF00) >> 8), (NDEF_MAX_LENGTH & 0xFF), // maximum NDEF file size
+    0x00,       // read access 0x0 = granted
+    0x00        // write access 0x0 = granted | 0xFF = deny
+  };
+
+  if(tagWriteable == false){
+    compatibility_container[14] = 0xFF;
   }
 
   tagWrittenByInitiator = false;
@@ -185,13 +189,17 @@ bool EmulateTag::emulate(const uint16_t tgInitAsTargetTimeout){
       }
       break;    
     case ISO7816_UPDATE_BINARY:
-      if( p1p2_length > NDEF_MAX_LENGTH){
-	setResponse(MEMORY_FAILURE, rwbuf, &sendlen);
-      }
-      else{
-	memcpy(ndef_file + p1p2_length, rwbuf + C_APDU_DATA, lc);
-	setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
-	tagWrittenByInitiator = true;
+      if(!tagWriteable){
+	  setResponse(FUNCTION_NOT_SUPPORTED, rwbuf, &sendlen);
+      } else{      
+	if( p1p2_length > NDEF_MAX_LENGTH){
+	  setResponse(MEMORY_FAILURE, rwbuf, &sendlen);
+	}
+	else{
+	  memcpy(ndef_file + p1p2_length, rwbuf + C_APDU_DATA, lc);
+	  setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
+	  tagWrittenByInitiator = true;
+	}
       }
       break;
     default:
