@@ -24,13 +24,13 @@ It is for [NFC Shield](http://goo.gl/Cac2OH) and [Xadow NFC](http://goo.gl/qBZMt
 + Git way (recommended)
 
   1. Get PN532 library and NDEF library
-  ```
-  cd {Arduino}\libraries
-  git init
-  git remote add origin https://github.com/Seeed-Studio/PN532.git
-  git pull origin master
-  git clone https://github.com/don/NDEF.git
-  ```
+
+          cd {Arduino}\libraries  
+          git init  
+          git remote add origin https://github.com/Seeed-Studio/PN532.git  
+          git pull origin master  
+          git clone https://github.com/don/NDEF.git  
+
   2. Follow the examples of the two libraries
 
 ### Contribution
