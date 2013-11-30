@@ -34,7 +34,7 @@ EmulateTag(PN532Interface &interface) : pn532(interface), uidPtr(0), tagWrittenB
 
   void getContent(uint8_t** buf, uint16_t* length){
     *buf = ndef_file + 2; // first 2 bytes = length
-    *length = (ndef_file[1] << 8) + ndef_file[0];
+    *length = (ndef_file[0] << 8) + ndef_file[1];
   }
 
   bool writeOccured(){
