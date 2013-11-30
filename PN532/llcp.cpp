@@ -133,7 +133,10 @@ int8_t LLCP::connect(uint16_t timeout)
 	// put a CONNECT PDU
 	headerBuf[0] = (LLCP_DEFAULT_DSAP << 2) + (PDU_CONNECT >> 2);
 	headerBuf[1] = ((PDU_CONNECT & 0x03) << 6) + LLCP_DEFAULT_SSAP;
-	if (!link.write(headerBuf, 2)) {
+    uint8_t body[] = "  urn:nfc:sn:snep";
+    body[0] = 0x06;
+    body[1] = sizeof(body) - 2 - 1;
+	if (!link.write(headerBuf, 2, body, sizeof(body) - 1)) {
 		return -2;
 	}
 
