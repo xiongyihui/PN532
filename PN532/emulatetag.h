@@ -8,7 +8,6 @@
 */
 /**************************************************************************/
 
-
 #ifndef __EMULATETAG_H__
 #define __EMULATETAG_H__
 
@@ -35,7 +34,7 @@ EmulateTag(PN532Interface &interface) : pn532(interface), uidPtr(0), tagWrittenB
 
   void getContent(uint8_t** buf, uint16_t* length){
     *buf = ndef_file + 2; // first 2 bytes = length
-    *length = (ndef_file[1] << 8) + ndef_file[0];
+    *length = (ndef_file[0] << 8) + ndef_file[1];
   }
 
   bool writeOccured(){
@@ -44,6 +43,14 @@ EmulateTag(PN532Interface &interface) : pn532(interface), uidPtr(0), tagWrittenB
 
   void setTagWriteable(bool setWriteable){
     tagWriteable = setWriteable;
+  }
+
+  uint8_t* getNdefFilePtr(){
+    return ndef_file;
+  }
+
+  uint8_t getNdefMaxLength(){
+    return NDEF_MAX_LENGTH;
   }
 
 private:
