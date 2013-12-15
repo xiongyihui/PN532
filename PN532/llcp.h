@@ -61,6 +61,7 @@ public:
 
 private:
 	MACLink link;
+    uint8_t mode;
 	uint8_t ssap;
 	uint8_t dsap;
     uint8_t *headerBuf;
