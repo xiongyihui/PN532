@@ -799,16 +799,24 @@ int16_t PN532::tgGetData(uint8_t *buf, uint8_t len)
 bool PN532::tgSetData(const uint8_t *header, uint8_t hlen, const uint8_t *body, uint8_t blen)
 {
     if (hlen > (sizeof(pn532_packetbuffer) - 1)) {
-        return false;
-    }
+        if ((body != 0) || (header == pn532_packetbuffer)) {
+            DMSG("tgSetData:buffer too small\n");
+            return false;
+        }
 
-    for (int8_t i = hlen - 1; i >= 0; i--){
-        pn532_packetbuffer[i + 1] = header[i];
-    }
-    pn532_packetbuffer[0] = PN532_COMMAND_TGSETDATA;
+        pn532_packetbuffer[0] = PN532_COMMAND_TGSETDATA;
+        if (HAL(writeCommand)(pn532_packetbuffer, 1, header, hlen)) {
+            return false;
+        }
+    } else {
+        for (int8_t i = hlen - 1; i >= 0; i--){
+            pn532_packetbuffer[i + 1] = header[i];
+        }
+        pn532_packetbuffer[0] = PN532_COMMAND_TGSETDATA;
 
-    if (HAL(writeCommand)(pn532_packetbuffer, hlen + 1, body, blen)) {
-        return false;
+        if (HAL(writeCommand)(pn532_packetbuffer, hlen + 1, body, blen)) {
+            return false;
+        }
     }
 
     if (0 > HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), 3000)) {
