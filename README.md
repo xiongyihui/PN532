@@ -40,3 +40,7 @@ It's based on [Adafruit_NFCShield_I2C](http://goo.gl/pk3FdB).
 @JiapengLi adds HSU interface.
 @awieser adds card emulation function.
 
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/Seeed-Studio/pn532/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
