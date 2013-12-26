@@ -21,15 +21,17 @@ It is for [NFC Shield](http://goo.gl/Cac2OH) and [Xadow NFC](http://goo.gl/qBZMt
   2. Downlaod [Don's NDEF library](http://goo.gl/ewxeAe)， extract it into Arduino's libraries and rename it to NDEF.
   3. Follow the examples of the two libraries.
 
-+ Git way (recommended)
++ Git way for Linux/Mac (recommended)
 
   1. Get PN532 library and NDEF library
 
           cd {Arduino}\libraries  
-          git init  
-          git remote add origin https://github.com/Seeed-Studio/PN532.git  
-          git pull origin master  
-          git clone https://github.com/don/NDEF.git  
+          git clone --recursive https://github.com/Seeed-Studio/PN532.git NFC
+          ln -s NFC/PN532 ./
+          ln -s NFC/PN532_SPI ./
+          ln -s NFC/PN532_I2C ./
+          ln -s NFC/PN532_HSU ./
+          ln -s NFC/NDEF ./
 
   2. Follow the examples of the two libraries
 
