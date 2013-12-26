@@ -199,6 +199,11 @@ bool EmulateTag::emulate(const uint16_t tgInitAsTargetTimeout){
 	  memcpy(ndef_file + p1p2_length, rwbuf + C_APDU_DATA, lc);
 	  setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
 	  tagWrittenByInitiator = true;
+      
+      uint16_t ndef_length = (ndef_file[0] << 8) + ndef_file[1];
+      if ((ndef_length > 0) && (updateNdefCallback != 0)) {
+        updateNdefCallback(ndef_file + 2, ndef_length);
+      }
 	}
       }
       break;

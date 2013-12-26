@@ -19,7 +19,7 @@ typedef enum {COMMAND_COMPLETE, TAG_NOT_FOUND, FUNCTION_NOT_SUPPORTED, MEMORY_FA
 class EmulateTag{
 
 public:
-EmulateTag(PN532Interface &interface) : pn532(interface), uidPtr(0), tagWrittenByInitiator(false), tagWriteable(true) { }
+EmulateTag(PN532Interface &interface) : pn532(interface), uidPtr(0), tagWrittenByInitiator(false), tagWriteable(true), updateNdefCallback(0) { }
   
   bool init();
 
@@ -53,12 +53,17 @@ EmulateTag(PN532Interface &interface) : pn532(interface), uidPtr(0), tagWrittenB
     return NDEF_MAX_LENGTH;
   }
 
+  void attach(void (*func)(uint8_t *buf, uint16_t length)) {
+    updateNdefCallback = func;
+  };
+
 private:
   PN532 pn532;
   uint8_t ndef_file[NDEF_MAX_LENGTH];
   uint8_t* uidPtr;
   bool tagWrittenByInitiator;
   bool tagWriteable;
+  void (*updateNdefCallback)(uint8_t *ndef, uint16_t length);
 
   void setResponse(responseCommand cmd, uint8_t* buf, uint8_t* sendlen, uint8_t sendlenOffset = 0);
 };
