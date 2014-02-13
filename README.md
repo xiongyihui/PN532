@@ -46,3 +46,5 @@ It's based on [Adafruit_NFCShield_I2C](http://goo.gl/pk3FdB).
 
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/Seeed-Studio/pn532/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
+
+[![Analytics](https://ga-beacon.appspot.com/UA-46589105-3/PN532)](https://github.com/igrigorik/ga-beacon)
