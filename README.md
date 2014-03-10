@@ -21,8 +21,8 @@ It works with:
 ### Getting Started
 1. **Download [zip file](https://github.com/elechouse/PN532/archive/PN532_HSU.zip) and 
 extract the three folders(PN532, PN532_SPI, PN532_HSU and PN532_I2C) into libraries of Arduino.**
-2. Downlaod [Don's NDEF library](http://goo.gl/ewxeAe) and extract it intro Arduino's libraries.
-2. Follow the examples of the library
+2. Downlaod [Don's NDEF library](http://goo.gl/ewxeAe) and extract it into libraries of Arduino's into a new folder called "NDEF" (Note if you leave this folder as NDEF-Master Arduino will not be able to use it as a library)
+2. Follow the examples of the PN532 library
 
 ### To do
 + Card emulation
