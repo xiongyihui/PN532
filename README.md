@@ -14,6 +14,10 @@ It is for [NFC Shield](http://goo.gl/Cac2OH) and [Xadow NFC](http://goo.gl/qBZMt
 + Support [mbed platform](http://goo.gl/kGPovZ)
 + Card emulation (NFC Type 4 tag)
 
+### To Do
++ To support more than one INFO PDU of P2P communication
++ To read/write NFC Type 4 tag
+
 ### Getting Started
 + Easy way
 
