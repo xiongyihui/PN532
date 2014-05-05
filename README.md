@@ -1,10 +1,11 @@
 ## NFC library for Arduino
 
 This is an Arduino library for PN532 to use NFC technology.
-It is for [NFC Shield](http://goo.gl/Cac2OH) and [Xadow NFC](http://goo.gl/qBZMt0).
+It is for [NFC Shield](http://goo.gl/Cac2OH), [Xadow NFC](http://goo.gl/qBZMt0) and [Grove - NFC](http://goo.gl/L3Uw5G).
 
 [![NFC Shield](http://www.seeedstudio.com/depot/bmz_cache/a/abe9904d46e29565fb15ec36e17a4a52.image.114x85.jpg)](http://goo.gl/Cac2OH)
 [![Xadow NFC](http://www.seeedstudio.com/depot/bmz_cache/d/d5f551a693fee5342877864ca5580cb6.image.114x85.jpg)](http://goo.gl/qBZMt0)
+[![Grove - NFC](http://www.seeedstudio.com/depot/bmz_cache/0/0170da02ed762650524f1d6bdbe1eae5.image.114x85.jpg)](http://goo.gl/L3Uw5G)
 
 ### Features
 + Support I2C, SPI and HSU of PN532
@@ -45,10 +46,5 @@ It's based on [Adafruit_NFCShield_I2C](http://goo.gl/pk3FdB).
 @Don writes the [NDEF library](http://goo.gl/jDjsXl) to make it more easy to use. 
 @JiapengLi adds HSU interface.
 @awieser adds card emulation function.
-
-
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/Seeed-Studio/pn532/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
-
 
 [![Analytics](https://ga-beacon.appspot.com/UA-46589105-3/PN532)](https://github.com/igrigorik/ga-beacon)
