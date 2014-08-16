@@ -652,6 +652,35 @@ uint8_t PN532::mifareultralight_ReadPage (uint8_t page, uint8_t *buffer)
 
 /**************************************************************************/
 /*!
+    Tries to write an entire 4-bytes data buffer at the specified page
+    address.
+
+    @param  page     The page number to write into.  (0..63).
+    @param  buffer   The byte array that contains the data to write.
+
+    @returns 1 if everything executed properly, 0 for an error
+*/
+/**************************************************************************/
+uint8_t PN532::mifareultralight_WritePage (uint8_t page, uint8_t *buffer)
+{
+    /* Prepare the first command */
+    pn532_packetbuffer[0] = PN532_COMMAND_INDATAEXCHANGE;
+    pn532_packetbuffer[1] = 1;                           /* Card number */
+    pn532_packetbuffer[2] = MIFARE_CMD_WRITE_ULTRALIGHT; /* Mifare UL Write cmd = 0xA2 */
+    pn532_packetbuffer[3] = page;                        /* page Number (0..63) */
+    memcpy (pn532_packetbuffer + 4, buffer, 4);          /* Data Payload */
+
+    /* Send the command */
+    if (HAL(writeCommand)(pn532_packetbuffer, 8)) {
+        return 0;
+    }
+
+    /* Read the response packet */
+    return (0 < HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer)));
+}
+
+/**************************************************************************/
+/*!
     @brief  Exchanges an APDU with the currently inlisted peer
 
     @param  send            Pointer to data to send
