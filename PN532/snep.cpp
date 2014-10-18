@@ -24,20 +24,21 @@ int8_t SNEP::write(const uint8_t *buf, uint8_t len, uint16_t timeout)
 	if (0 >= llcp.write(headerBuf, 6, buf, len)) {
 		return -3;
 	}
-	
-	if (6 > llcp.read(headerBuf, headerBufLen)) {
+
+	uint8_t rbuf[16];
+	if (6 > llcp.read(rbuf, sizeof(rbuf))) {
 		return -4;
 	}
 
 	// check SNEP version
-	if (SNEP_DEFAULT_VERSION != headerBuf[0]) {
+	if (SNEP_DEFAULT_VERSION != rbuf[0]) {
 		DMSG("The received SNEP message's major version is different\n");
 		// To-do: send Unsupported Version response
 		return -4;
 	}
 
 	// expect a put request
-	if (SNEP_RESPONSE_SUCCESS != headerBuf[1]) {
+	if (SNEP_RESPONSE_SUCCESS != rbuf[1]) {
 		DMSG("Expect a success response\n");
 		return -4;
 	}
@@ -82,7 +83,10 @@ int16_t SNEP::read(uint8_t *buf, uint8_t len, uint16_t timeout)
 	uint32_t length = (buf[2] << 24) + (buf[3] << 16) + (buf[4] << 8) + buf[5];
 	// length should not be more than 244 (header + body < 255, header = 6 + 3 + 2)
 	if (length > (status - 6)) {
-		DMSG("The SNEP message is too large\n"); 
+		DMSG("The SNEP message is too large: "); 
+        DMSG_INT(length);
+        DMSG_INT(status - 6);
+		DMSG("\n");
 		return -4;
 	}
 	for (uint8_t i = 0; i < length; i++) {

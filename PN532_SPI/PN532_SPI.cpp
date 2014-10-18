@@ -1,6 +1,7 @@
 
 #include "PN532_SPI.h"
 #include "PN532_debug.h"
+#include "Arduino.h"
 
 #define STATUS_READ     2
 #define DATA_WRITE      1

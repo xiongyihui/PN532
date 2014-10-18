@@ -7,11 +7,11 @@
     Note that you need the baud rate to be 115200 because we need to print
     out the data and read from the card at the same time!
 
+    To enable debug message, define DEBUG in PN532/PN532_debug.h
     
 */
 /**************************************************************************/
 
-// choose to SPI or I2C or HSU
 #if 0
   #include <SPI.h>
   #include <PN532_SPI.h>
@@ -19,7 +19,7 @@
 
   PN532_SPI pn532spi(SPI, 10);
   PN532 nfc(pn532spi);
-#elif 0
+#elif 1
   #include <PN532_HSU.h>
   #include <PN532.h>
       
@@ -29,11 +29,8 @@
   #include <Wire.h>
   #include <PN532_I2C.h>
   #include <PN532.h>
-
-  PN532_I2C pn532i2c(Wire);
-  PN532 nfc(pn532i2c);
 #endif
-
+  
 void setup(void) {
   Serial.begin(115200);
   Serial.println("Hello!");

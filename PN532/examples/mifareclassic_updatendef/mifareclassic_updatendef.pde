@@ -2,18 +2,19 @@
 /*!
     Updates a sector that is already formatted for NDEF (using
     mifareclassic_formatndef.pde for example), inserting a new url
+
+    To enable debug message, define DEBUG in PN532/PN532_debug.h
 */
 /**************************************************************************/
 
-// choose to SPI or I2C or HSU
 #if 0
   #include <SPI.h>
   #include <PN532_SPI.h>
   #include "PN532.h"
 
-  PN532SPI pn532spi(SPI, 10);
+  PN532_SPI pn532spi(SPI, 10);
   PN532 nfc(pn532spi);
-#elif 0
+#elif 1
   #include <PN532_HSU.h>
   #include <PN532.h>
       
@@ -23,9 +24,6 @@
   #include <Wire.h>
   #include <PN532_I2C.h>
   #include <PN532.h>
-
-  PN532_I2C pn532i2c(Wire);
-  PN532 nfc(pn532i2c);
 #endif
 
 
@@ -40,7 +38,7 @@ const char * url = "elechouse.com";
 uint8_t ndefprefix = NDEF_URIPREFIX_HTTP_WWWDOT;
 
 // for an email address
-//const char * url = "sevice@elechouse.com";
+//const char * url = "mail@example.com";
 //uint8_t ndefprefix = NDEF_URIPREFIX_MAILTO;
 
 // for a phone number
