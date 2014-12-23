@@ -12,6 +12,8 @@
 */
 /**************************************************************************/
 
+
+/* When the number after #if set as 1, it will be switch to SPI Mode*/
 #if 0
   #include <SPI.h>
   #include <PN532_SPI.h>
@@ -19,16 +21,21 @@
 
   PN532_SPI pn532spi(SPI, 10);
   PN532 nfc(pn532spi);
-#elif 1
+
+/* When the number after #elif set as 1, it will be switch to HSU Mode*/
+#elif 0
   #include <PN532_HSU.h>
   #include <PN532.h>
       
   PN532_HSU pn532hsu(Serial1);
   PN532 nfc(pn532hsu);
+
+/* When the number after #if & #elif set as 0, it will be switch to I2C Mode*/
 #else 
   #include <Wire.h>
   #include <PN532_I2C.h>
   #include <PN532.h>
+  #include <NfcAdapter.h>
   
   PN532_I2C pn532i2c(Wire);
   PN532 nfc(pn532i2c);
