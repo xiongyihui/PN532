@@ -280,11 +280,13 @@ bool PN532::setPassiveActivationRetries(uint8_t maxRetries)
                           with the card's UID (up to 7 bytes)
     @param  uidLength     Pointer to the variable that will hold the
                           length of the card's UID.
+    @param  timeout       The number of tries before timing out
+    @param  inlist        If set to true, the card will be inlisted
 
     @returns 1 if everything executed properly, 0 for an error
 */
 /**************************************************************************/
-bool PN532::readPassiveTargetID(uint8_t cardbaudrate, uint8_t *uid, uint8_t *uidLength, uint16_t timeout)
+bool PN532::readPassiveTargetID(uint8_t cardbaudrate, uint8_t *uid, uint8_t *uidLength, uint16_t timeout, bool inlist)
 {
     pn532_packetbuffer[0] = PN532_COMMAND_INLISTPASSIVETARGET;
     pn532_packetbuffer[1] = 1;  // max 1 cards at once (we can set this to 2 later)
@@ -328,6 +330,10 @@ bool PN532::readPassiveTargetID(uint8_t cardbaudrate, uint8_t *uid, uint8_t *uid
 
     for (uint8_t i = 0; i < pn532_packetbuffer[5]; i++) {
         uid[i] = pn532_packetbuffer[6 + i];
+    }
+
+    if (inlist) {
+        inListedTag = pn532_packetbuffer[1];
     }
 
     return 1;
