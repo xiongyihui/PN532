@@ -3,7 +3,7 @@
 This is an Arduino library for PN532 to use NFC technology.
 It is for [NFC Shield](http://goo.gl/Cac2OH), [Xadow NFC](http://goo.gl/qBZMt0) and [Grove - NFC](http://goo.gl/L3Uw5G).
 
-[![NFC Shield](http://www.seeedstudio.com/depot/bmz_cache/a/abe9904d46e29565fb15ec36e17a4a52.image.114x85.jpg)](http://goo.gl/Cac2OH)
+[![NFC Shield](http://www.seeedstudio.com/depot/bmz_cache/2/2d9e045860b92102231b021a11ebe01b.image.90x67.jpg)](http://goo.gl/Cac2OH)
 [![Xadow NFC](http://www.seeedstudio.com/depot/bmz_cache/d/d5f551a693fee5342877864ca5580cb6.image.114x85.jpg)](http://goo.gl/qBZMt0)
 [![Grove - NFC](http://www.seeedstudio.com/depot/bmz_cache/0/0170da02ed762650524f1d6bdbe1eae5.image.114x85.jpg)](http://goo.gl/L3Uw5G)
 
