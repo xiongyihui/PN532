@@ -70,22 +70,28 @@ void EmulateTag::setUid(uint8_t* uid){
 
 bool EmulateTag::emulate(const uint16_t tgInitAsTargetTimeout){
 
+  // http://www.nxp.com/documents/application_note/AN133910.pdf
   uint8_t command[] = {
-        PN532_COMMAND_TGINITASTARGET,
-        5,                  // MODE: PICC only, Passive only
+      PN532_COMMAND_TGINITASTARGET,
+      0x05,                  // MODE: PICC only, Passive only
 
-        0x04, 0x00,         // SENS_RES
-        0x00, 0x00, 0x00,   // NFCID1
-        0x20,               // SEL_RES
+      0x04, 0x00,         // SENS_RES
+      0x00, 0x00, 0x00,   // NFCID1
+      0x20,               // SEL_RES
 
-        0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0,   // FeliCaParams
-        0,0,
+      0x01, 0xFE,         // Parameters to build POL_RES
+      0xA2, 0xA3, 0xA4,
+      0xA5, 0xA6, 0xA7,
+      0xC0, 0xC1, 0xC2,
+      0xC3, 0xC4, 0xC5,
+      0xC6, 0xC7, 0xFF,
+      0xFF,
+      0xAA, 0x99, 0x88, //NFCID3t (10 bytes)
+      0x77, 0x66, 0x55, 0x44,
+      0x33, 0x22, 0x11,
 
-        0,0,0,0,0,0,0,0,0,0, // NFCID3t
-
-        0, // length of general bytes
-        0  // length of historical bytes
+      0, // length of general bytes
+      0  // length of historical bytes
   };
 
   if(uidPtr != 0){  // if uid is set copy 3 bytes to nfcid1
