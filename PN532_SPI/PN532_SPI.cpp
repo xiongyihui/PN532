@@ -23,7 +23,7 @@ void PN532_SPI::begin()
     _spi->setBitOrder(LSBFIRST);
 #ifndef __SAM3X8E__
     _spi->setClockDivider(SPI_CLOCK_DIV8); // set clock 2MHz(max: 5MHz)
-#else 
+#else
     /** DUE spi library does not support SPI_CLOCK_DIV8 macro */
     _spi->setClockDivider(42);             // set clock 2MHz(max: 5MHz)
 #endif
