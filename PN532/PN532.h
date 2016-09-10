@@ -63,6 +63,14 @@
 #define MIFARE_CMD_INCREMENT                (0xC1)
 #define MIFARE_CMD_STORE                    (0xC2)
 
+// FeliCa Commands
+#define FELICA_CMD_POLLING                  (0x00)
+#define FELICA_CMD_REQUEST_SERVICE          (0x02)
+#define FELICA_CMD_REQUEST_RESPONSE         (0x04)
+#define FELICA_CMD_READ_WITHOUT_ENCRYPTION  (0x06)
+#define FELICA_CMD_WRITE_WITHOUT_ENCRYPTION (0x08)
+#define FELICA_CMD_REQUEST_SYSTEM_CODE      (0x0C)
+
 // Prefixes for NDEF Records (to identify record type)
 #define NDEF_URIPREFIX_NONE                 (0x00)
 #define NDEF_URIPREFIX_HTTP_WWWDOT          (0x01)
@@ -108,6 +116,13 @@
 #define PN532_GPIO_P33                      (3)
 #define PN532_GPIO_P34                      (4)
 #define PN532_GPIO_P35                      (5)
+
+// FeliCa consts
+#define FELICA_READ_MAX_SERVICE_NUM         16
+#define FELICA_READ_MAX_BLOCK_NUM           12 // for typical FeliCa card
+#define FELICA_WRITE_MAX_SERVICE_NUM        16
+#define FELICA_WRITE_MAX_BLOCK_NUM          10 // for typical FeliCa card
+#define FELICA_REQ_SERVICE_MAX_NODE_NUM     32
 
 class PN532
 {
@@ -156,6 +171,16 @@ public:
     uint8_t mifareultralight_ReadPage (uint8_t page, uint8_t *buffer);
     uint8_t mifareultralight_WritePage (uint8_t page, uint8_t *buffer);
 
+    // FeliCa Functions
+    int8_t felica_Polling(uint16_t systemCode, uint8_t requestCode, uint8_t *idm, uint8_t *pmm, uint16_t *systemCodeResponse, uint16_t timeout=1000);
+    int8_t felica_SendCommand (const uint8_t * command, uint8_t commandlength, uint8_t * response, uint8_t * responseLength);
+    int8_t felica_RequestService(uint8_t numNode, uint16_t *nodeCodeList, uint16_t *keyVersions) ;
+    int8_t felica_RequestResponse(uint8_t *mode);
+    int8_t felica_ReadWithoutEncryption (uint8_t numService, const uint16_t *serviceCodeList, uint8_t numBlock, const uint16_t *blockList, uint8_t blockData[][16]);
+    int8_t felica_WriteWithoutEncryption (uint8_t numService, const uint16_t *serviceCodeList, uint8_t numBlock, const uint16_t *blockList, uint8_t blockData[][16]);
+    int8_t felica_RequestSystemCode(uint8_t *numSystemCode, uint16_t *systemCodeList);
+    int8_t felica_Release();
+
     // Help functions to display formatted text
     static void PrintHex(const uint8_t *data, const uint32_t numBytes);
     static void PrintHexChar(const uint8_t *pbtData, const uint32_t numBytes);
@@ -170,8 +195,10 @@ private:
     uint8_t _uidLen;  // uid len
     uint8_t _key[6];  // Mifare Classic key
     uint8_t inListedTag; // Tg number of inlisted tag.
+    uint8_t _felicaIDm[8]; // FeliCa IDm (NFCID2)
+    uint8_t _felicaPMm[8]; // FeliCa PMm (PAD)
 
-    uint8_t pn532_packetbuffer[64];
+    uint8_t pn532_packetbuffer[255];
 
     PN532Interface *_interface;
 };
