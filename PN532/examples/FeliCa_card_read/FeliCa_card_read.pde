@@ -40,6 +40,12 @@ PN532 nfc(pn532i2c);
 uint8_t        _prevIDm[8];
 unsigned long  _prevTime;
 
+void PrintHex8(const uint8_t d) {
+  Serial.print(" ");
+  Serial.print( (d >> 4) & 0x0F, HEX);
+  Serial.print( d & 0x0F, HEX);
+}
+
 void setup(void)
 {
   Serial.begin(115200);
@@ -109,10 +115,38 @@ void loop(void)
   memcpy(_prevIDm, idm, 8);
   _prevTime = millis();
 
-  Serial.print("Read Without Encryption command -> ");
   uint8_t blockData[3][16];
-  uint16_t serviceCodeList[1] = {0x000B};
-  uint16_t blockList[3] = {0x8000, 0x8001, 0x8002};
+  uint16_t serviceCodeList[1];
+  uint16_t blockList[3];
+
+  Serial.println("Write Without Encryption command ");
+  serviceCodeList[0] = 0x0009;
+  blockList[0] = 0x8000;
+  unsigned long now = millis();
+  blockData[0][3] = now & 0xFF;
+  blockData[0][2] = (now >>= 8) & 0xFF;
+  blockData[0][1] = (now >>= 8) & 0xFF;
+  blockData[0][0] = (now >>= 8) & 0xFF;
+  Serial.print("   Writing current millis (");
+  PrintHex8(blockData[0][0]);
+  PrintHex8(blockData[0][1]);
+  PrintHex8(blockData[0][2]);
+  PrintHex8(blockData[0][3]);
+  Serial.print(" ) to Block 0 -> ");
+  ret = nfc.felica_WriteWithoutEncryption(1, serviceCodeList, 1, blockList, blockData);
+  if (ret != 1)
+  {
+    Serial.println("error");
+  } else {
+    Serial.println("OK!");
+  }
+  memset(blockData[0], 0, 16);
+
+  Serial.print("Read Without Encryption command -> ");
+  serviceCodeList[0] = 0x000B;
+  blockList[0] = 0x8000;
+  blockList[1] = 0x8001;
+  blockList[2] = 0x8002;
   ret = nfc.felica_ReadWithoutEncryption(1, serviceCodeList, 3, blockList, blockData);
   if (ret != 1)
   {
