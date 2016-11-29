@@ -143,6 +143,66 @@ uint32_t PN532::getFirmwareVersion(void)
 
 /**************************************************************************/
 /*!
+    @brief  Read a PN532 register
+
+    @returns  The register value.
+*/
+/**************************************************************************/
+uint32_t PN532::readRegister(uint16_t reg)
+{
+    uint32_t response;
+
+    pn532_packetbuffer[0] = PN532_COMMAND_READREGISTER;
+    pn532_packetbuffer[1] = (reg >> 8) & 0xFF;
+    pn532_packetbuffer[2] = reg & 0xFF;
+
+    if (HAL(writeCommand)(pn532_packetbuffer, 3)) {
+        return 0;
+    }
+
+    // read data packet
+    int16_t status = HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer));
+    if (0 > status) {
+        return 0;
+    }
+
+    response = pn532_packetbuffer[0];
+
+    return response;
+}
+
+/**************************************************************************/
+/*!
+    @brief  Read a PN532 register
+
+    @returns  The register value.
+*/
+/**************************************************************************/
+uint32_t PN532::writeRegister(uint16_t reg, uint8_t val)
+{
+    uint32_t response;
+
+    pn532_packetbuffer[0] = PN532_COMMAND_WRITEREGISTER;
+    pn532_packetbuffer[1] = (reg >> 8) & 0xFF;
+    pn532_packetbuffer[2] = reg & 0xFF;
+    pn532_packetbuffer[3] = val;
+
+
+    if (HAL(writeCommand)(pn532_packetbuffer, 4)) {
+        return 0;
+    }
+
+    // read data packet
+    int16_t status = HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer));
+    if (0 > status) {
+        return 0;
+    }
+
+    return 1;
+}
+
+/**************************************************************************/
+/*!
     Writes an 8-bit value that sets the state of the PN532's GPIO pins
 
     @warning This function is provided exclusively for board testing and
