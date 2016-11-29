@@ -143,7 +143,9 @@ uint32_t PN532::getFirmwareVersion(void)
 
 /**************************************************************************/
 /*!
-    @brief  Read a PN532 register
+    @brief  Read a PN532 register.
+
+    @param  reg  the 16-bit register address.
 
     @returns  The register value.
 */
@@ -173,9 +175,12 @@ uint32_t PN532::readRegister(uint16_t reg)
 
 /**************************************************************************/
 /*!
-    @brief  Read a PN532 register
+    @brief  Write to a PN532 register.
 
-    @returns  The register value.
+    @param  reg  the 16-bit register address.
+    @param  val  the 8-bit value to write.
+
+    @returns  0 for failure, 1 for success.
 */
 /**************************************************************************/
 uint32_t PN532::writeRegister(uint16_t reg, uint8_t val)
