@@ -1,3 +1,6 @@
+/**
+ * @modified picospuch
+ */
 
 #ifndef __PN532_I2C_H__
 #define __PN532_I2C_H__
@@ -19,6 +22,7 @@ private:
     uint8_t command;
     
     int8_t readAckFrame();
+    int16_t getResponseLength(uint8_t buf[], uint8_t len, uint16_t timeout);
     
     inline uint8_t write(uint8_t data) {
         #if ARDUINO >= 100
