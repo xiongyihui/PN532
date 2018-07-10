@@ -45,8 +45,25 @@ To use the `Serial1` control PN532, refer to the code below.
 		//...
 	}
 
+If your Arduino has only one serial interface and you want to keep it for control or debugging with the Serial Monitor, you can use the [`SoftwareSerial`][SoftwareSerial] library to control the PN532 by emulating a serial interface. Include `PN532_SWHSU.h` instead of `PN532_HSU.h`:
+
+	#include <SoftwareSerial.h>
+	#include <PN532_SWHSU.h>
+	#include <PN532.h>
+	
+	SoftwareSerial SWSerial( 10, 11 ); // RX, TX
+
+	PN532_SWHSU pn532swhsu( SWSerial );
+	PN532 nfc( pn532swhsu );
+
+	void setup(void)
+	{
+		nfc.begin();
+		//...
+	}
 
 [Mega]: http://arduino.cc/en/Main/arduinoBoardMega
 [DUE]: http://arduino.cc/en/Main/arduinoBoardDue
 [Leonardo]: http://arduino.cc/en/Main/arduinoBoardLeonardo
+[SoftwareSerial]: https://www.arduino.cc/en/Reference/softwareSerial
 
