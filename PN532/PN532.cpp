@@ -621,11 +621,6 @@ uint8_t PN532::mifareclassic_WriteNDEFURI (uint8_t sectorNumber, uint8_t uriIden
 /**************************************************************************/
 uint8_t PN532::mifareultralight_ReadPage (uint8_t page, uint8_t *buffer)
 {
-    if (page >= 64) {
-        DMSG("Page value out of range\n");
-        return 0;
-    }
-
     /* Prepare the command */
     pn532_packetbuffer[0] = PN532_COMMAND_INDATAEXCHANGE;
     pn532_packetbuffer[1] = 1;                   /* Card number */
@@ -879,4 +874,27 @@ int16_t PN532::inRelease(const uint8_t relevantTarget){
     return HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer));
 }
 
+uint8_t PN532::ntag21x_auth(const uint8_t *key)
+{
+    uint8_t i;
+
+    // Prepare the authentication command //
+    pn532_packetbuffer[0] = 0x42;
+    pn532_packetbuffer[1] = 0x1B;
+    memcpy (pn532_packetbuffer + 2, key, 4);
+
+    if (HAL(writeCommand)(pn532_packetbuffer, 6))
+        return 0;
+
+    // Read the response packet
+    HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer));
+
+    // Check if the response is valid and we are authenticated???
+    if (pn532_packetbuffer[0] != 0x00) {
+        DMSG("\nAuthentification failed\n");
+        return 0;
+    }
+
+    return 1;
+}
 
