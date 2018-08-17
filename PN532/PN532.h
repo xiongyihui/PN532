@@ -139,6 +139,7 @@ public:
     bool writeGPIO(uint8_t pinstate);
     uint8_t readGPIO(void);
     bool setPassiveActivationRetries(uint8_t maxRetries);
+    bool setRFField(uint8_t autoRFCA, uint8_t rFOnOff);
 
     /**
     * @brief    Init PN532 as a target
