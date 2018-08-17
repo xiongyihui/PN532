@@ -358,10 +358,7 @@ bool PN532::setRFField(uint8_t autoRFCA, uint8_t rFOnOff)
         return 0x0;  // command failed
     }
 
-    // read data packet
-    if (HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer), timeout) < 0) {
-        return 0x0;
-    }
+    return (0 < HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer)));
 }
 
 /***** ISO14443A Commands ******/
