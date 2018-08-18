@@ -339,7 +339,10 @@ bool PN532::setPassiveActivationRetries(uint8_t maxRetries)
     Sets the RFon/off uint8_t of the RFConfiguration register
 
     @param  autoRFCA    0x00 No check of the external field before 
-                        activation, 0x02 Check the external field
+                        activation 
+                        
+                        0x02 Check the external field before 
+                        activation
 
     @param  rFOnOff     0x00 Switch the RF field off, 0x01 switch the RF 
                         field on
