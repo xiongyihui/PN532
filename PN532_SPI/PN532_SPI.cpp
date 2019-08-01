@@ -69,7 +69,7 @@ int16_t PN532_SPI::readResponse(uint8_t buf[], uint8_t len, uint16_t timeout)
     while (!isReady()) {
         delay(1);
         time++;
-        if (timeout > 0 && time > timeout) {
+        if (time > timeout) {
             return PN532_TIMEOUT;
         }
     }
