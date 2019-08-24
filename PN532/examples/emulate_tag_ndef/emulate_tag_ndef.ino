@@ -1,7 +1,7 @@
 
 #include "SPI.h"
-#include "PN532_SPI.h"
-#include "emulatetag.h"
+#include "PN532/PN532_SPI/PN532_SPI.h"
+#include "PN532/PN532/emulatetag.h"
 #include "NdefMessage.h"
 
 PN532_SPI pn532spi(SPI, 10);

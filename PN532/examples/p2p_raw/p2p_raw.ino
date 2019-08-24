@@ -2,9 +2,9 @@
 // send a SNEP message to adnroid and get a message from android
 
 #include "SPI.h"
-#include "PN532_SPI.h"
-#include "llcp.h"
-#include "snep.h"
+#include "PN532/PN532_SPI/PN532_SPI.h"
+#include "PN532/PN532/llcp.h"
+#include "PN532/PN532/snep.h"
 
 PN532_SPI pn532spi(SPI, 10);
 SNEP nfc(pn532spi);

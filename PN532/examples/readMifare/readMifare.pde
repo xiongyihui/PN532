@@ -16,13 +16,13 @@
     Page 4 is read by default since this is the first 'general-
     purpose' page on the tags.
 
-    To enable debug message, define DEBUG in PN532/PN532_debug.h
+    To enable debug message, define DEBUG in PN532/PN532/PN532/PN532_debug.h
 */
 /**************************************************************************/
 
 #include <SPI.h>
-#include <PN532_SPI.h>
-#include "PN532.h"
+#include <PN532/PN532_SPI/PN532_SPI.h>
+#include "PN532/PN532/PN532.h"
 
 PN532_SPI pn532spi(SPI, 10);
 PN532 nfc(pn532spi);

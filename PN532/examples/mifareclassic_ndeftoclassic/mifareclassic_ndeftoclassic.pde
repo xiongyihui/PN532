@@ -4,13 +4,13 @@
     formatted for NDEF messages using mifareclassic_formatndef, and resets
     the authentication keys back to the Mifare Classic defaults
 
-    To enable debug message, define DEBUG in PN532/PN532_debug.h
+    To enable debug message, define DEBUG in PN532/PN532/PN532/PN532_debug.h
 */
 /**************************************************************************/
 
 #include <SPI.h>
-#include <PN532_SPI.h>
-#include "PN532.h"
+#include <PN532/PN532_SPI/PN532_SPI.h>
+#include "PN532/PN532/PN532.h"
 
 PN532_SPI pn532spi(SPI, 10);
 PN532 nfc(pn532spi);

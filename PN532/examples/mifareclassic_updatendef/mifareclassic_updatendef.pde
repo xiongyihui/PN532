@@ -3,13 +3,13 @@
     Updates a sector that is already formatted for NDEF (using
     mifareclassic_formatndef.pde for example), inserting a new url
 
-    To enable debug message, define DEBUG in PN532/PN532_debug.h
+    To enable debug message, define DEBUG in PN532/PN532/PN532/PN532_debug.h
 */
 /**************************************************************************/
 
 #include <SPI.h>
-#include <PN532_SPI.h>
-#include "PN532.h"
+#include <PN532/PN532_SPI/PN532_SPI.h>
+#include "PN532/PN532/PN532.h"
 
 PN532_SPI pn532spi(SPI, 10);
 PN532 nfc(pn532spi);

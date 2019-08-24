@@ -1,6 +1,6 @@
 /**************************************************************************/
 /*!
-    @file     emulatetag.h
+    @file     PN532/PN532/emulatetag.h
     @author   Armin Wieser
     @license  BSD
 
@@ -11,7 +11,7 @@
 #ifndef __EMULATETAG_H__
 #define __EMULATETAG_H__
 
-#include "PN532.h"
+#include "PN532/PN532/PN532.h"
 
 #define NDEF_MAX_LENGTH 128  // altough ndef can handle up to 0xfffe in size, arduino cannot.
 typedef enum {COMMAND_COMPLETE, TAG_NOT_FOUND, FUNCTION_NOT_SUPPORTED, MEMORY_FAILURE, END_OF_FILE_BEFORE_REACHED_LE_BYTES} responseCommand;

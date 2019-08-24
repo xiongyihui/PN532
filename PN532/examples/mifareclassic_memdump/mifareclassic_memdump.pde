@@ -5,13 +5,13 @@
     Note that you need the baud rate to be 115200 because we need to print
     out the data and read from the card at the same time!
 
-    To enable debug message, define DEBUG in PN532/PN532_debug.h
+    To enable debug message, define DEBUG in PN532/PN532/PN532/PN532_debug.h
 */
 /**************************************************************************/
 
 #include <SPI.h>
-#include <PN532_SPI.h>
-#include "PN532.h"
+#include <PN532/PN532_SPI/PN532_SPI.h>
+#include "PN532/PN532/PN532.h"
 
 PN532_SPI pn532spi(SPI, 10);
 PN532 nfc(pn532spi);
