@@ -3,20 +3,18 @@
 // Valid address range for byte AUTH0 is from 00h to FFh.
 // If AUTH0 is set to a page address which is higher than the last page from the user configuration,
 // the password protection is effectively disabled
-
+#include <PN532/PN532/PN532.h>
+#include <NfcAdapter.h>
 #if 0       // Using PN532's SPI (Seeed NFC shield)
 #include <SPI.h>
 #include <PN532/PN532_SPI/PN532_SPI.h>
-#include <PN532/PN532/PN532.h>
-#include <NfcAdapter.h>
+
 
 PN532_SPI intf(SPI, 10);
 PN532 nfc = PN532(intf);
 #else        // Using PN532's I2C
 #include <Wire.h>
 #include <PN532/PN532_I2C/PN532_I2C.h>
-#include <PN532/PN532/PN532.h>
-#include <NfcAdapter.h>
 
 PN532_I2C intf(Wire);
 PN532 nfc = PN532(intf);

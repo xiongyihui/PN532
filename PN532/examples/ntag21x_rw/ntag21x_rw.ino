@@ -2,21 +2,20 @@
 // Clean resets a tag back to factory-like state
 // For Mifare Classic, tag is zero'd and reformatted as Mifare Classic
 // For Mifare Ultralight, tags is zero'd and left empty
-
+#include <PN532/PN532/PN532.h>
+#include <NfcAdapter.h>
 
 #if 0       // Using PN532's SPI (Seeed NFC shield)
 #include <SPI.h>
 #include <PN532/PN532_SPI/PN532_SPI.h>
-#include <PN532/PN532/PN532.h>
-#include <NfcAdapter.h>
+
 
 PN532_SPI intf(SPI, 10);
 PN532 nfc = PN532(intf);
 #else        // Using PN532's I2C
 #include <Wire.h>
 #include <PN532/PN532_I2C/PN532_I2C.h>
-#include <PN532/PN532/PN532.h>
-#include <NfcAdapter.h>
+
 
 PN532_I2C intf(Wire);
 PN532 nfc = PN532(intf);
