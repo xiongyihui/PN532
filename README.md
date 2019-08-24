@@ -7,7 +7,7 @@ It is for [NFC Shield](http://goo.gl/Cac2OH) and [Grove - NFC](http://goo.gl/L3U
 [![Grove - NFC](https://statics3.seeedstudio.com/images/product/grove%20nfc.jpg)](http://goo.gl/L3Uw5G)
 
 ### Features
-+ Support I2C, SPI and HSU of PN532
++ Support all interfaces of PN532 (I2C, SPI, HSU )
 + Read/write Mifare Classic Card
 + Works with [Don's NDEF Library](http://goo.gl/jDjsXl)
 + Communicate with android 4.0+([Lists of devices supported](https://github.com/Seeed-Studio/PN532/wiki/List-of-devices-supported))
@@ -46,4 +46,43 @@ It's based on [Adafruit_NFCShield_I2C](http://goo.gl/pk3FdB).
 @JiapengLi adds HSU interface.
 @awieser adds card emulation function.
 
-[![Analytics](https://ga-beacon.appspot.com/UA-46589105-3/PN532)](https://github.com/igrigorik/ga-beacon)
+## HSU Interface
+
+HSU is short for High Speed Uart. HSU interface needs only 4 wires to connect PN532 with Arduino, [Sensor Shield](http://goo.gl/i0EQgd) can make it more easier. For some Arduino boards like [Leonardo][Leonardo], [DUE][DUE], [Mega][Mega] ect, there are more than one `Serial` on these boards, so we can use this additional Serial to control PN532, HSU uses 115200 baud rate .
+
+To use the `Serial1` control PN532, refer to the code below.
+```c++
+	#include <PN532_HSU.h>
+	#include <PN532.h>
+	
+	PN532_HSU pn532hsu(Serial1);
+	PN532 nfc(pn532hsu);
+
+	void setup(void)
+	{
+		nfc.begin();
+		//...
+	}
+```
+If your Arduino has only one serial interface and you want to keep it for control or debugging with the Serial Monitor, you can use the [`SoftwareSerial`][SoftwareSerial] library to control the PN532 by emulating a serial interface. Include `PN532_SWHSU.h` instead of `PN532_HSU.h`:
+```c++
+	#include <SoftwareSerial.h>
+	#include <PN532_SWHSU.h>
+	#include <PN532.h>
+	
+	SoftwareSerial SWSerial( 10, 11 ); // RX, TX
+
+	PN532_SWHSU pn532swhsu( SWSerial );
+	PN532 nfc( pn532swhsu );
+
+	void setup(void)
+	{
+		nfc.begin();
+		//...
+	}
+```
+[Mega]: http://arduino.cc/en/Main/arduinoBoardMega
+[DUE]: http://arduino.cc/en/Main/arduinoBoardDue
+[Leonardo]: http://arduino.cc/en/Main/arduinoBoardLeonardo
+[SoftwareSerial]: https://www.arduino.cc/en/Reference/softwareSerial
+

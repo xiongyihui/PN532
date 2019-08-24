@@ -57,7 +57,7 @@ int8_t PN532_HSU::writeCommand(const uint8_t *header, uint8_t hlen, const uint8_
     _serial->write(length);
     _serial->write(~length + 1); // checksum of length
 
-    _serial->write(uint8_t(PN532_HOSTTOPN532));
+    _serial->write(PN532_HOSTTOPN532);
     uint8_t sum = PN532_HOSTTOPN532; // sum of TFI + DATA
 
     DMSG("\nWrite: ");
@@ -88,8 +88,6 @@ int8_t PN532_HSU::writeCommand(const uint8_t *header, uint8_t hlen, const uint8_
 int16_t PN532_HSU::readResponse(uint8_t buf[], uint8_t len, uint16_t timeout)
 {
     uint8_t tmp[3];
-
-    delay(100);
 
     DMSG("\nRead:  ");
 
@@ -162,8 +160,6 @@ int8_t PN532_HSU::readAckFrame()
     const uint8_t PN532_ACK[] = {0, 0, 0xFF, 0, 0xFF, 0};
     uint8_t ackBuf[sizeof(PN532_ACK)];
 
-    delay(100);
-
     DMSG("\nAck: ");
 
     if (receive(ackBuf, sizeof(PN532_ACK), PN532_ACK_WAIT_TIME) <= 0)
@@ -203,7 +199,6 @@ int8_t PN532_HSU::receive(uint8_t *buf, int len, uint16_t timeout)
             {
                 break;
             }
-            delay(10);
         } while ((timeout == 0) || ((millis() - start_millis) < timeout));
 
         if (ret < 0)
@@ -216,6 +211,9 @@ int8_t PN532_HSU::receive(uint8_t *buf, int len, uint16_t timeout)
             {
                 return PN532_TIMEOUT;
             }
+            buf[read_bytes] = (uint8_t)ret;
+            DMSG_HEX(ret);
+            read_bytes++;
         }
         buf[read_bytes] = (uint8_t)ret;
         DMSG_HEX(ret);
