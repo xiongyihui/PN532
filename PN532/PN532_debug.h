@@ -5,11 +5,17 @@
 
 #include "Arduino.h"
 
+#ifdef ARDUINO_SAMD_VARIANT_COMPLIANCE
+    #define SERIAL SerialUSB
+#else
+    #define SERIAL Serial
+#endif
+
 #ifdef DEBUG
-#define DMSG(args...)       Serial.print(args)
-#define DMSG_STR(str)       Serial.println(str)
-#define DMSG_HEX(num)       Serial.print(' '); Serial.print((num>>4)&0x0F, HEX); Serial.print(num&0x0F, HEX)
-#define DMSG_INT(num)       Serial.print(' '); Serial.print(num)
+#define DMSG(args...)       SERIAL.print(args)
+#define DMSG_STR(str)       SERIAL.println(str)
+#define DMSG_HEX(num)       SERIAL.print(' '); SERIAL.print((num>>4)&0x0F, HEX); SERIAL.print(num&0x0F, HEX)
+#define DMSG_INT(num)       SERIAL.print(' '); SERIAL.print(num)
 #else
 #define DMSG(args...)
 #define DMSG_STR(str)

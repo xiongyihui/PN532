@@ -1,6 +1,6 @@
 
-#include "PN532_SWHSU.h"
-#include "PN532_debug.h"
+#include "PN532/PN532_SWHSU/PN532_SWHSU.h"
+#include "PN532/PN532/PN532_debug.h"
 
 
 PN532_SWHSU::PN532_SWHSU(SoftwareSerial &serial)
