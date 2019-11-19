@@ -1,6 +1,6 @@
-## NFC library for Arduino
+## NFC library 
 
-This is an Arduino library for PN532 to use NFC technology.
+This is an library for PN532 to use NFC technology.
 It is for [NFC Shield](http://goo.gl/Cac2OH) and [Grove - NFC](http://goo.gl/L3Uw5G).
 
 [![NFC Shield](https://statics3.seeedstudio.com/images/113030001%201.jpg)](http://goo.gl/Cac2OH)
