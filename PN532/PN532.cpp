@@ -387,6 +387,24 @@ bool PN532::setRFField(uint8_t autoRFCA, uint8_t rFOnOff)
 
 /**************************************************************************/
 /*!
+    Puts PN532 into passive detection state with IRQ while waiting for an ISO14443A target
+
+    @param  cardBaudRate  Baud rate of the card
+
+    @returns 1 if everything executed properly, 0 for an error
+*/
+bool PN532::startPassiveTargetIDDetection(uint8_t cardbaudrate) {
+    pn532_packetbuffer[0] = PN532_COMMAND_INLISTPASSIVETARGET;
+    pn532_packetbuffer[1] = 1; // max 1 cards at once (we can set this to 2 later)
+    pn532_packetbuffer[2] = cardbaudrate;
+
+    if (HAL(writeCommand)(pn532_packetbuffer, 3)) {
+        return 0x0;  // command failed
+    }
+}
+
+/**************************************************************************/
+/*!
     Waits for an ISO14443A target to enter the field
 
     @param  cardBaudRate  Baud rate of the card
