@@ -629,7 +629,19 @@ uint8_t PN532::mifareclassic_WriteDataBlock (uint8_t blockNumber, uint8_t *data)
     }
 
     /* Read the response packet */
-    return (0 < HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer)));
+    if (0 > HAL(readResponse)(pn532_packetbuffer, sizeof(pn532_packetbuffer))) {
+        return 0;
+    }
+
+    /* Check status */
+    if (pn532_packetbuffer[0] != 0x00) {
+    	DMSG("Status code indicates an error: ");
+    	DMSG_HEX(pn532_packetbuffer[0]);
+    	DMSG("\n");
+        return 0;
+    }
+
+    return 1;
 }
 
 /**************************************************************************/
@@ -856,6 +868,53 @@ bool PN532::inDataExchange(uint8_t *send, uint8_t sendLength, uint8_t *response,
     *responseLength = length;
 
     return true;
+}
+
+/**************************************************************************/
+/*!
+    This command is used to support basic data exchanges
+    between the PN532 and a target.
+
+    @param  send            Pointer to the command buffer
+    @param  sendLength      Command length in bytes
+    @param  response        Pointer to response data
+    @param  responseLength  Pointer to the response data length
+*/
+/**************************************************************************/
+bool PN532::inCommunicateThru(uint8_t *send, uint8_t sendLength, uint8_t *response, uint8_t *responseLength)
+{
+  pn532_packetbuffer[0] = PN532_COMMAND_INCOMMUNICATETHRU;
+
+  if (HAL(writeCommand)(pn532_packetbuffer, 1, send, sendLength)) {
+    return false;
+  }
+
+  int16_t status = HAL(readResponse)(response, *responseLength, 1000);
+  if (status < 0) {
+    return false;
+  }
+
+  // check status code
+  if (response[0] != 0x0) {
+      DMSG("Status code indicates an error : 0x");
+      DMSG_HEX(pn532_packetbuffer[0]);
+      DMSG("\n");
+      return false;
+  }
+
+  uint8_t length = status;
+  length -= 1;
+
+  if (length > *responseLength) {
+      length = *responseLength; // silent truncation...
+  }
+
+  for (uint8_t i = 0; i < length; i++) {
+    response[i] = response[i + 1];
+  }
+  *responseLength = length;
+
+  return true;
 }
 
 /**************************************************************************/
